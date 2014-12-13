@@ -1,0 +1,11 @@
+data/
+__pycache__/
+
+.DS_store
+*.swp
+*.pyc
+config.js
+config.ini
+*.sublime-project
+*.sublime-workspace
+

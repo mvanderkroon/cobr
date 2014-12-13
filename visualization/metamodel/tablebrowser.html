@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+    font: 10px Helvetica Neue, sans-serif;
+    background: #ffffff;
+    color:black;
+}
+
+
+</style>
+<head>
+    <link rel="stylesheet" type="text/css" href="forcelayout.css">
+</head>
+<body>
+    <script src="d3.min.js"></script>
+    <script src="jquery-2.1.1.min.js"></script>
+    <script src="underscore-min.js"></script>
+    <script src="forcelayout.js"></script>
+    <script src="donut.js"></script>
+
+    <div style="float:left;margin-top:5px;margin-right:10px;color:#707070;"><h2>NUMERIC: </h2></div><div id='container'></div>
+
+    <script>
+    var tablebrowser = function(table, columns) {
+        var i = 0;
+        for (var ci in columns) {
+
+            var c = columns[ci];
+            // console.log(c.datatype)
+            if (c.datatype != 'numeric' && c.datatype != 'int') continue;
+
+            d3.select('#container')
+                .append('div')
+                .attr('id', 'donut_' + i)
+                .style('float', 'left')
+                .style('width', '40px')
+                .style('height', '40px')
+                .style('margin', '5px')
+                .style('margin', '5px');
+
+            var d = donut({'parent':'#donut_' + i});
+            d.render([ { category:'null', value:c.num_nulls },
+                    { category:'positive', value:c.num_positive },
+                    { category:'negative', value:c.num_negative },
+                    { category:'zero', value:c.num_zero }
+            ]);
+            i++;
+        }
+
+        
+    }
+
+    $.ajax({
+        url: 'http://127.0.0.1:5000/api/mcolumn',
+        data: {
+            "q": JSON.stringify({
+                "filters": [
+                {
+                    "name": "tablename",
+                    "op": "eq",
+                    "val": "Debiteur"
+                }
+                ]
+            })
+        },
+        dataType: "json",
+        contentType: "application/json",
+        success: function(result) {
+            var columns = result.objects;
+
+            $.ajax({
+                url: 'http://127.0.0.1:5000/api/mtable',
+                data: {
+                    "q": JSON.stringify({
+                        "filters": [
+                        {
+                            "name": "tablename",
+                            "op": "eq",
+                            "val": "Debiteur"
+                        }
+                        ]
+                    })
+                },
+                dataType: "json",
+                contentType: "application/json",
+                success: function(result) {
+                    var table = result.objects[0];
+                    tablebrowser(table, columns);
+                }
+            });
+
+        }
+    });
+
+    
+    </script>
+
+</body>

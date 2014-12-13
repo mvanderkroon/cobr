@@ -1,0 +1,90 @@
+body {
+  font: 10px Helvetica Neue, sans-serif;
+  background:#d4d4d4;
+}
+
+svg {
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
+}
+
+.node {
+	cursor: pointer;	
+}
+
+.node.fixed {
+  fill: #f00;
+}
+
+#sunburst .node {
+  stroke: white;
+  stroke-width: .5px;
+}
+
+#force .node {
+  stroke: transparent;
+  stroke-width: 1.5px;
+}
+
+#force .link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 5px;
+}
+
+#histogram .bar rect {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
+
+#histogram .bar text {
+  fill: #fff;
+}
+
+#histogram .axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+#histogram2 .bar rect {
+  fill: #006666;
+  shape-rendering: crispEdges;
+}
+
+#histogram2 .bar text {
+  fill: #fff;
+}
+
+#histogram2 .axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+#grid tr.even td {
+  background-color: white;
+  border:1pt solid white;
+}
+
+#grid tr.odd td {
+  background-color: white;
+  border:1pt solid white;
+}
+
+div.tooltip {   
+  position: absolute;           
+  text-align: left;           
+  width: auto;                  
+  height: auto;                 
+  padding: 5px;             
+  font-size: 12px;
+  color: black;     
+  background: white;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}

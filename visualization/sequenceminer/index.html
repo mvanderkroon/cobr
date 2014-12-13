@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+	<link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+	<div id="sequence"></div>
+	<div id="sunburst" style="float:left;width:49%;"></div>
+	<div id="histogram" style="float:left;width:49%;height:99px;"></div>
+	<div id="histogram2" style="float:left;width:49%;height:99px;"></div>
+	<div id="grid" style="float:left;width:45%;height:400px;"></div>
+	<!-- <div id="force" style="float:left;width:49%;"></div> -->
+
+	<script src="lib/underscore.js"></script>
+	<script src="lib/d3.v3.min.js"></script>
+	<script src="lib/jquery-1.11.0.min.js"></script>
+	<script src="lib/t.js"></script>
+
+	<script src="objects/breadcrumb.js"></script>
+	<script src="objects/sunburst.js"></script>
+	<script src="objects/force.js"></script>
+	<script src="objects/histogram.js"></script>
+	<script src="objects/grid.js"></script>
+
+	<script src="basedata.js"></script>
+	<script src="context.js"></script>
+	<script>
+
+		var getAncestors = function(node) {
+			var path = [],
+				ids = {},
+				current = node;
+
+			do {
+				path.unshift(current);
+				ids[current.id] = 0;
+				if (current.parent) current = current.parent;
+			} while (current.parent);
+
+			return {
+				'path': path,
+				'ids': ids
+			};
+		}
+
+		// the input file needs a header!
+		d3.csv("smpl_data/random_sample.csv", function(lines) {
+			
+			var bd1 = new basedata();
+			bd1.init(lines);
+
+			var ctx1 = new context(bd1);
+
+			var bc = new breadcrumb({
+				'parent': '#sequence'
+			}, ctx1);
+
+			var sb = new sunburst({
+				'parent': '#sunburst'
+			}, ctx1);
+
+			var hg = new histogram({
+				'parent': '#histogram',
+				'variable': 'age'
+			}, ctx1);
+
+			var hg = new histogram({
+				'parent': '#histogram2',
+				'variable': 'sex'
+			}, ctx1);
+
+			var gr = new grid({
+				'parent': '#grid'
+			}, ctx1);
+
+			// var fc = new force({
+			// 	'parent': '#force'
+			// }, ctx1);
+		});
+
+	</script>
+</body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
