@@ -20,21 +20,35 @@ parser.add_option("-i", "--host", dest="db_host", help="", metavar="string")
 parser.add_option("-u", "--user", dest="db_user", help="", metavar="string")
 parser.add_option("-p", "--password", dest="db_password", help="", metavar="string")
 parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string")
+# parser.add_option("-t", "--truncate", dest="truncate", help="", metavar="boolean", default=False)
 (options, args) = parser.parse_args()
+
+# NOTES:
+# potentially, we could add functionality to insert a document per word contained in text/varchar
+# fields to allow a full text search ability on those fields too
 
 def getDataFn(column=None, verbose=False):
 	if column is None:
 		return
+
+	tdict = {}
+	tdict['image'] = "CAST(CAST([{0}] AS BINARY) AS NVARCHAR(MAX))"
+	tdict['text'] = "CAST([{0}] AS NVARCHAR(MAX))"
+	tdict['ntext'] = "CAST([{0}] AS NVARCHAR(MAX))"
+
+	selectclause = "[{0}]".format(column.columnname)		
+	if column.datatype in tdict:
+		selectclause = tdict[column.datatype].format(column.columnname)
 
 	retval = []
 	with pymssql.connect(options.db_host, options.db_user, options.db_password, options.db_catalog) as conn:
 		with conn.cursor() as cursor:
 			query = """
 				SELECT DISTINCT
-					[{0}]
+					{0}
 				FROM 
 					[{1}].[{2}].[{3}]
-				""".format(column.columnname, column.db_catalog, column.db_schema, column.tablename)
+				""".format(selectclause, column.db_catalog, column.db_schema, column.tablename)
 			
 			if verbose:
 				print(query)
@@ -52,23 +66,26 @@ def backspace(n):
 	print('\r' * n,end='')                 # use '\r' to go back
 
 def main():
-	headers = {
-		'Content-Type': 'application/json'
-	}
-
-	# response = requests.post('http://localhost:9200/projects/fb', data=json.dumps(params), headers=headers)
-	# response = requests.delete('http://localhost:9200/projects')
-
 	config = configparser.ConfigParser()
 	config.read('config.ini')
 	if len(config.sections()) == 0:
 		print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
 		quit()
 
+	headers = {
+		'Content-Type': 'application/json'
+	}
+
+	es = Elasticsearch([config['ec']['ip'] + ':' + config['ec']['port']])
+
+	# response = requests.post('http://localhost:9200/projects/fb', data=json.dumps(params), headers=headers)
+	# if options.truncate:
+		# response = requests.delete('http://localhost:9200/projects')
+
 	reader = metaclient.reader(config['metadb']['connection_string'])
 
 	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
-	es = Elasticsearch()
+	
 
 	print(len(columns))
 	for i,column in enumerate(columns):

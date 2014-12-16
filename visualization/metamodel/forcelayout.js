@@ -4,10 +4,15 @@ function forcelayout(config) {
     var containerHeight = (($(config.parent).height() == 0) ? $(window).height() : $(config.parent).height());
     var containerWidth = (($(config.parent).width() == 0) ? $(window).width() : $(config.parent).width());
 
+    // var zoom = d3.behavior.zoom()
+    //     .scaleExtent([1, 10])
+    //     .on("zoom", zoomed);
+
     var svg = d3.select(config.parent).append("svg")
         .attr("width", containerWidth)
         .attr("height", containerHeight)
         .append("g");
+        // .call(zoom);
 
     var nodes;
     var links;
@@ -31,6 +36,7 @@ function forcelayout(config) {
     var minRadius = 6;
 
     var cscale = d3.scale.category10();
+
     var sscale = d3.scale.sqrt(); 
 
     var linkColor = function(d) {
@@ -49,14 +55,17 @@ function forcelayout(config) {
     }
 
     self.render = function(data) {
+
         if (data) {
             nodes = data.nodes;
             links = data.links;
 
             nmax = _.max(nodes, function(node){ return node[config.nodeSizeBy]; });
             nmin = _.min(nodes, function(node){ return node[config.nodeSizeBy]; });
+
+            cscale(nodes[0].db_catalog)
         }
-        
+
         sscale.range([config.nodeMinRadius, config.nodeMaxRadius]).domain([nmin[config.nodeSizeBy], nmax[config.nodeSizeBy]]);     
 
         force
@@ -86,7 +95,7 @@ function forcelayout(config) {
             .enter().append("circle")
             .attr("class", "node")
             .attr("id", function(d) {
-                return 'node_' + d.index;
+                return d.index;
             })
             .attr("r", function(d) {
                 return nodeSize(d);
@@ -161,12 +170,20 @@ function forcelayout(config) {
     }
 
     self.handleMouseoverNode = function(d) {
+        ttstr = d.db_catalog + '.' + d.db_schema + '.' + d.tablename + '<br/>'
+        ttstr += '<b>row count: </b>' + d.num_rows + '<br/>'
+        ttstr += '<b>col count: </b>' + d.num_columns + '<br/>'
+        ttstr += '<b>#inlinks: </b>' + d.num_explicit_inlinks + '<br/>'
+        ttstr += '<b>#outlinks: </b>' + d.num_explicit_outlinks + '<br/>'
+        ttstr += '<b>comment: </b>' + d.comment + '<br/>'
+        ttstr += '<b>tags: </b>' + d.tags;
+
         tooltip.transition()
             .duration(200)
             .style("opacity", 0.8);
 
         tooltip
-            .html(d.db_catalog + '.' + d.db_schema + '.' + d.tablename + '<br/><b>row count: </b>' + d.num_rows + '<br/><b>col count: </b>' + d.num_columns + '<br/><b>#inlinks: </b>' + d.num_explicit_inlinks + '<br/><b>#outlinks: </b>' + d.num_explicit_outlinks)
+            .html(ttstr)
             .style("left", ((d3.event.pageX) + 20) + "px")
             .style("top", (d3.event.pageY) + "px");
     }
@@ -187,6 +204,52 @@ function forcelayout(config) {
             return nodeColor(d);
         });
     }
+
+    self.highlightNodes = function(nodes) {
+
+        var ids = _.pluck(nodes, 'id');
+        
+        svg.selectAll(".node")
+            .style("opacity", 0.1)
+            .filter(function(node) {
+                return ids.indexOf(node.id) != -1;
+            })
+            .style("opacity", 1)
+            .style("fill", "red");
+    }
+
+    self.unhighlightNodes = function() {
+        svg.selectAll(".node")
+            .style("fill", function(d) {
+                return nodeColor(d);
+            })
+            .style("opacity", 0.8);
+    }
+
+    self.highlightLinks = function(links) {
+        var ids = _.pluck(links, 'id');
+        
+        svg.selectAll(".link")
+            .style("opacity", 0.1)
+            .filter(function(link) {
+                return ids.indexOf(link.id) != -1;
+            })
+            .style("opacity", 1)
+            .style("fill", "red");
+
+    }
+
+    self.unhighlightLinks = function() {
+        svg.selectAll(".link")
+            .style("fill", function(d) {
+                return linkColor(d);
+            })
+            .style("opacity", 0.6);
+    }
+
+    // function zoomed() {
+    //     svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    // }
 
     /**
 	UTILITY METHODS

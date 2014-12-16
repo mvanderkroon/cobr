@@ -17,124 +17,136 @@ body {
     <script src="jquery-2.1.1.min.js"></script>
     <script src="underscore-min.js"></script>
     <script src="forcelayout.js"></script>
+    <script src="elasticsearch.js"></script>
 
-    <div id="filter">
-        <form action="index.html" method="get">
-            <b>node filter:</b></br>
-            <select id="filterBy" name="filterBy"></select>
-            
-            <select id="filterOp" name="filterOp">
-                <option>eq</option>
-            </select>
-            
-            <input type="text" id="filterVal" name="filterVal"></input>
-
-            <input type="submit"></input>
-        </form>
+    <div id="filters">
+        node: <select id="nodeFilterBy" name="nodeFilterBy" onchange="doRender()">
+            <option>SF2015</option>
+            <option>sfdb</option>
+            <option>Sundb</option>
+            <option>X10DBASE</option>
+        </select>
+        link: <select id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
+            <option>explicit</option>
+            <option>implicit</option>
+        </select>
     </div>
 
-    <input type="search" id="nodeQuery" style="width:200px;" onkeyup="handle();"></input><br/>
+    tablename: <input type="search" id="nodeQuery" style="width:300px;" onkeyup="handleNQ();"></input><br/>
+    elasticsearch: <input type="search" id="ecQuery" style="width:300px;" onkeyup="handleEcQ();"></input><br/>
 
     <div id='forcelayout'></div>
 
     <script>
-    var queryDict = {}
-    location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]})
 
-    filterpresets = {
+    var apihost = 'http://10.1.1.104:5000/api/';
+    var echost = '10.1.1.104:9200';
 
-    };
+    window.onload = function(){
+        doRender();
+    }
+
+    var client = new elasticsearch.Client({
+        host: echost
+    });
 
     var force;
     var nodes = [];
     var nodesdict = {};
     var links = [];
 
-    $.ajax({
-        url: 'http://127.0.0.1:5000/api/mtable',
-        data: {
-            "q": JSON.stringify({
-                "filters": [
-                // {
-                //     "name": "db_catalog",
-                //     "op": "eq",
-                //     "val": "X10DBASE"
-                // }
-                ]
-            })
-        },
-        dataType: "json",
-        contentType: "application/json",
-        success: function(noderesult) {
-            nodes = noderesult.objects;
-	    
-            // populate a quick lookup dictionary; will come in handy when populating the links
-            _.each(nodes, function(node, i) {
-                var key = node.db_catalog + "" + node.db_schema + "" + node.tablename;
-                nodesdict[key] = {
-                    'node': node,
-                    'index': i
-                };
-            });
+    var doRender = function() {
+        d3.select('#forcelayout').select('svg').remove('*');
 
-            $.ajax({
-                url: 'http://127.0.0.1:5000/api/mforeignkey',
-                data: {
-                    "q": JSON.stringify({
-                        "filters": [
-                                // {
-                                //     "name": "comment",
-                                //     "op": "eq",
-                                //     "val": "csc"
-                                // }
-                                // , 
-                            //     {
-                            //         "name": "db_catalog",
-                            //         "op": "eq",
-                            //         "val": "X10DBASE"
-                            //     }
-                            ]
-                            ,
-                            "disjunction": false
+        var db = $('#nodeFilterBy').val();
+        var linkType = $('#linkFilterBy').val();
+
+        $.ajax({
+            url: apihost + 'mtable',
+            data: {
+                "q": JSON.stringify({
+                    "filters": [
+                    {
+                        "name": "db_catalog",
+                        "op": "eq",
+                        "val": db
                     }
-                    )
-                },
-                dataType: "json",
-                contentType: "application/json",
-                success: function(linkresult) {
-                    links = linkresult.objects;
+                    ]
+                })
+            },
+            dataType: "json",
+            contentType: "application/json",
+            success: function(noderesult) {
+                nodes = noderesult.objects;
+    	    
+                // populate a quick lookup dictionary; will come in handy when populating the links
+                _.each(nodes, function(node, i) {
+                    var key = node.db_catalog + "" + node.db_schema + "" + node.tablename;
+                    nodesdict[key] = {
+                        'node': node,
+                        'index': i
+                    };
+                });
 
-                    // populate the network using the nodedict and links
-                    _.each(links, function(link) {
-                        var srcKey = link.db_catalog + "" + link.pkdb_schema + "" + link.pktablename;
-                        var tarKey = link.db_catalog + "" + link.fkdb_schema + "" + link.fktablename;
+                $.ajax({
+                    url: apihost + 'mforeignkey',
+                    data: {
+                        "q": JSON.stringify({
+                            "filters": [
+                                    {
+                                        "name": "type",
+                                        "op": "eq",
+                                        "val": linkType
+                                    }
+                                    , 
+                                    {
+                                        "name": "db_catalog",
+                                        "op": "eq",
+                                        "val": db
+                                    }
+                                ]
+                                ,
+                                "disjunction": false
+                        }
+                        )
+                    },
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function(linkresult) {
+                        links = linkresult.objects;
 
-                        var srcNode = nodesdict[srcKey];
-                        var tarNode = nodesdict[tarKey];
+                        // populate the network using the nodedict and links
+                        _.each(links, function(link) {
+                            var srcKey = link.db_catalog + "" + link.pkdb_schema + "" + link.pktablename;
+                            var tarKey = link.db_catalog + "" + link.fkdb_schema + "" + link.fktablename;
 
-                        link['source'] = srcNode.index;
-                        link['target'] = tarNode.index;
-                        link['value'] = 1;
+                            var srcNode = nodesdict[srcKey];
+                            var tarNode = nodesdict[tarKey];
 
-                        // console.log(srcNode.weight)
-                        // console.log(tarNode.weight)
-                        // console.log('')
-                    });
+                            link['source'] = srcNode.index;
+                            link['target'] = tarNode.index;
+                            link['value'] = 1;
 
-                    force = forcelayout({
-                        'parent': '#forcelayout'
-                    });
+                            // console.log(srcNode.weight)
+                            // console.log(tarNode.weight)
+                            // console.log('')
+                        });
 
-                    force.render({
-                        'nodes': nodes,
-                        'links': links
-                    });
-                }
-            });
-        }
-    });
+                        force = forcelayout({
+                            'parent': '#forcelayout'
+                        });
 
-    var handle = function(e) {
+                        force.render({
+                            'nodes': nodes,
+                            'links': links
+                        });
+                    }
+                });
+            }
+        });
+    };
+    
+    var handleNQ = function(e) {
         if (!e) e = window.event;
 
         var keyCode = e.keyCode || e.which;
@@ -143,60 +155,103 @@ body {
             var t = $('#nodeQuery')[0].value.toLowerCase();
 
             if (t.length <= 0) {
-                d3.selectAll('circle').transition().duration(500).style('opacity', 0.75);
-                d3.selectAll('line').transition().duration(500).style('opacity', 0.75);
+                force.unhighlightNodes();
+                force.unhighlightLinks();
                 return;
             }
 
-            d3.selectAll('circle').style('opacity', 0.1);
-            d3.selectAll('line').style('opacity', 0.1);
-
             var re = new RegExp(t);
+            var nodeLst = [];
+            var linkLst = [];
 
-            for (i in nodesdict) {
+            for (var i in nodesdict) {
                 var obj = nodesdict[i];
-
-                if (re.test(obj.tablename.toLowerCase())) {
-                    var dnode = d3.select('#node_' + obj.index);
-
-                    dnode
-                        .style('opacity', 1)
-                        .transition()
-                        .duration(250)
-                        .attr('r', 30)
-                        .transition()
-                        .attr('r', nodesizescale(obj.num_rows))
-                        .duration(250);
+                
+                if (re.test(obj.node.tablename.toLowerCase())) {
+                    nodeLst.push(obj.node);
                 }
             }
 
-            for (i in linklist) {
-                var link = linklist[i];
+            for (var i in links) {
+                var link = links[i];
 
-                if (re.test(link.source.tablename.toLowerCase())) {
-                    d3.select('#' + link.id).style('opacity', 1);
-                }
-                if (re.test(link.target.tablename.toLowerCase())) {
-                    d3.select('#' + link.id).style('opacity', 1);
+                if (re.test(link.source.tablename.toLowerCase()) || re.test(link.target.tablename.toLowerCase())) {
+                    linkLst.push(link);
                 }
             }
+
+            force.highlightNodes(nodeLst);
+            force.highlightLinks(linkLst);
         } else if (keyCode == 27) {
-            d3.selectAll('circle').transition().duration(500).style('opacity', 0.75);
-            d3.selectAll('line').transition().duration(500).style('opacity', 0.75);
+           force.unhighlightNodes();
+           force.unhighlightLinks();
         }
     }
 
-     window.onload = function(){
-        var select = document.getElementById("filterBy");
-            var options = ['db_catalog', 'comment', 'db_schema', 'tags'];
-            for (var i = 0; i < options.length; i++) {
-                var opt = options[i];
-                var el = document.createElement("option");
-                el.textContent = opt;
-                el.value = opt;
-                select.appendChild(el);
+    var handleEcQ = function(e) {
+        if (!e) e = window.event;
+
+        var keyCode = e.keyCode || e.which;
+
+        if (keyCode == 13) { // 'enter' pressed
+            var query = $('#ecQuery')[0].value.toLowerCase();
+
+            if (query.length <= 0) {
+                force.unhighlightNodes();
+                force.unhighlightLinks();
+                return;
             }
+            
+            var nodeLst = [];
+            var linkLst = [];
+
+            client.search({
+                index: 'projects',
+                type: 'fb',
+                body: {
+                    query: {
+                            match: {
+                            value: query
+                        }
+                    }
+                }
+            }).then(function (body) {
+                
+                var hits = body.hits.hits;
+
+                for (var hi in hits) {
+                    var hit = hits[hi];
+
+                    for (var i in nodesdict) {
+                        var obj = nodesdict[i];
+                        var node = obj.node;
+                        
+                        if (hit._source.db_catalog == node.db_catalog && hit._source.db_schema == node.db_schema && hit._source.tablename == node.tablename) {
+                            nodeLst.push(obj.node);
+                        }
+                    }
+
+                    for (var i in links) {
+                        var link = links[i];
+
+                        if (hit._source.db_catalog == link.source.db_catalog && hit._source.db_schema == link.source.db_schema && hit._source.tablename == link.source.tablename || hit._source.db_catalog == link.target.db_catalog && hit._source.db_schema == link.target.db_schema && hit._source.tablename == link.target.tablename) {
+                            linkLst.push(link);
+                        }
+                    }
+                }
+
+                force.highlightNodes(nodeLst);
+                force.highlightLinks(linkLst);
+
+            }, function (error) {
+                // console.trace(error.message);
+            });
+        } else if (keyCode == 27) { // 'esc' pressed
+            force.unhighlightNodes();
+            force.unhighlightLinks();
         }
+    }
+
     </script>
 
 </body>
