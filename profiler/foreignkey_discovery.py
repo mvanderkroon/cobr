@@ -1,18 +1,29 @@
 import sys
 sys.path.append("../common")
+sys.path.append("../api")
+
 
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
-
 import metaclient
+import mssql_connector
 
 import math
 import numpy as np
 import emd
 from sqlalchemy import and_
 
-import mssql_connector
+import os
+import configparser
+from optparse import OptionParser
 
-class Affaires():
+parser = OptionParser()
+parser.add_option("-i", "--host", dest="db_host", help="", metavar="string")
+parser.add_option("-u", "--user", dest="db_user", help="", metavar="string")
+parser.add_option("-p", "--password", dest="db_password", help="", metavar="string")
+parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string")
+(options, args) = parser.parse_args()
+
+class Discovery():
 	def __init__(self, tables=[], columns=[], pksingle=[], pkmulti=[], colseparator='|', getDataFn=None):
 		self.tables = tables
 		self.columns = columns
@@ -20,6 +31,58 @@ class Affaires():
 		self.pkmulti = pkmulti
 		self.colseparator = colseparator
 		self.getDataFn = getDataFn
+
+	# def getDataFn(self, schema, columnnames, tablename):
+	# 	print('getting data for: {0}.{1} -- {2} '.format(schema, tablename, str(columnnames)))
+
+	# 	tdict = {}
+	# 	tdict['image'] = "CAST(CAST([{0}] AS BINARY) AS NVARCHAR(MAX))"
+	# 	tdict['text'] = "CAST([{0}] AS NVARCHAR(MAX))"
+	# 	tdict['ntext'] = "CAST([{0}] AS NVARCHAR(MAX))"
+
+	# 	selectclause = ""
+	# 	if type(columnnames) is list:
+	# 		# first, figure out column datatype
+	# 		for cn in columnnames:
+	# 			key = (schema, tablename, cn)
+
+	# 			if self.coldict[key]['data_type'] in tdict:
+	# 				selectclause += tdict[self.coldict[key]['data_type']].format(cn) + ","
+	# 			else:
+	# 				selectclause += "[{0}],".format(cn)
+	# 		selectclause = selectclause[0:-1]
+	# 	else:
+	# 		# first, figure out column datatype
+	# 		key = (schema, tablename, str(columnnames))
+	# 		if self.coldict[key]['data_type'] in tdict:
+	# 			selectclause += tdict[self.coldict[key]['data_type']].format(str(columnnames))
+	# 		else:
+	# 			selectclause += "[{0}]".format(columnnames)
+
+	# 	result = []
+
+	# 	q = """
+	# 		SELECT 
+	# 			{0}, COUNT(*)
+	# 		FROM 
+	# 			[{1}].[{2}]
+	# 		GROUP BY
+	# 			{0}
+	# 		ORDER BY COUNT(*) DESC
+	# 		""".format(selectclause, schema, tablename)
+		
+	# 	print(q)
+	# 	print('')
+
+	# 	self.cur.execute(q)
+	# 	columns = []
+	# 	for row in self.cur:
+	# 		if len(columnnames) > 1:
+	# 			result.append(list(row))
+	# 		else:
+	# 			result.append(list(row))
+				
+	# 	return result;
 
 	def cartesian(self, L):
 		if (len(L) == 0 or type(L) != list): # this shouldn't fucking happen
@@ -234,12 +297,18 @@ def pruneDuplicateFks(fks):
 	return pruned
 
 def main():
-	reader = metaclient.reader('')
+	config = configparser.ConfigParser()
+	config.read('config.ini')
+	if len(config.sections()) == 0:
+		print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
+		quit()
+
+	reader = metaclient.reader(config['metadb']['connection_string'])
 
 	# filter syntax, see sqlalchemy documentation
-	tables = reader.getTables(filter=Table.db_catalog=='')
-	columns = reader.getColumns(filter=Column.db_catalog=='')
-	pks = reader.getPrimaryKeys(filter=PrimaryKey.db_catalog=='') 
+	tables = reader.getTables(filter=Table.db_catalog==options.db_catalog)
+	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
+	pks = reader.getPrimaryKeys(filter=PrimaryKey.db_catalog==options.db_catalog) 
 	reader.close()
 
 	# split primary keys into singlecolumn and multicolumn keys
@@ -251,12 +320,12 @@ def main():
 		else:
 			spks.append(pk)
 
-	db = mssql_connector.database(db_host='', db_user='', db_password='', db_catalog='')
+	db = mssql_connector.database(db_host=options.db_host, db_user=options.db_user, db_password=options.db_password, db_catalog=options.db_catalog)
 	db.doDataInit()
-	affaires = Affaires(tables=tables, columns=columns, pksingle=spks, pkmulti=mkps, getDataFn=db.getData)
+	affaires = Discovery(tables=tables, columns=columns, pksingle=spks, pkmulti=mkps, getDataFn=db.getData)
 	fks = pruneDuplicateFks([ fk[0] for fk in affaires.discoverfks(0.9) ])
 
-	writer = metaclient.writer('')
+	writer = metaclient.writer(config['metadb']['connection_string'])
 	writer.writeForeignKeys(fks)
 	writer.close()
 

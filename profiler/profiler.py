@@ -9,10 +9,10 @@ from tableprocessor import MssqlTableProcessor
 from postprocessor import PostProcessor
 import metaclient
 
-import os
-from optparse import OptionParser
 import datetime
 import configparser
+
+import os
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -23,8 +23,8 @@ if len(config.sections()) == 0:
 def main():
 	sts = datetime.datetime.now()
 
-	miner = mssqlMiner(db_catalog=config['INDATABASE']['db_catalog'], db_host=config['INDATABASE']['db_host'], db_user=config['INDATABASE']['db_user'], db_password=config['INDATABASE']['db_password'])
-	writer = metaclient.writer(config['OUTDATABASE']['connection_string'])
+	miner = mssqlMiner(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
+	writer = metaclient.writer(config['metadb']['connection_string'])
 
 	fks = miner.getForeignKeys()
 	pks = miner.getPrimaryKeys()
@@ -67,7 +67,7 @@ def main():
 	for i,table in enumerate(tables):
 		try:
 			print('processing {0} of {1:5}: {2}.{3}.{4}'.format(i+1, len(tables), table.db_catalog, table.db_schema, table.tablename))
-			tableProcessor = MssqlTableProcessor(db_host=config['INDATABASE']['db_host'], db_user=config['INDATABASE']['db_user'], db_password=config['INDATABASE']['db_password'], table=table)
+			tableProcessor = MssqlTableProcessor(db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'], table=table)
 			table.num_explicit_inlinks = len(postProcessor.getNumExplicitInlinksForTable(table))
 			table.num_explicit_outlinks = len(postProcessor.getNumExplicitOutlinksForTable(table))
 			table.num_rows = tableProcessor.getTableRowCount()
