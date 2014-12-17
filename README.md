@@ -1,3 +1,10 @@
+# DS-toolkit features (in no particular order)
+* database profiling
+* implicit primary key detection
+* implicit foreign key detection
+* visual database metamodel explorative analysis
+* deep database search (Elastic Search over each distinct value, of each column, of each table)
+* sequence mining
 
 # install virtualenvwrapper
 1. sudo apt-get install python-pip
