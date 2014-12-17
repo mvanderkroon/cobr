@@ -25,6 +25,7 @@ body {
             <option>sfdb</option>
             <option>Sundb</option>
             <option>X10DBASE</option>
+            <option>def</option>
         </select>
         link: <select id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
             <option>explicit</option>
@@ -39,8 +40,8 @@ body {
 
     <script>
 
-    var apihost = 'http://10.1.1.104:5000/api/';
-    var echost = '10.1.1.104:9200';
+    var apihost = 'http://127.0.0.1:5000/api/';
+    var echost = 'localhost:9200';
 
     window.onload = function(){
         doRender();

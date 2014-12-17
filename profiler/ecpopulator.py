@@ -4,7 +4,7 @@ sys.path.append("../api")
 
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
 import metaclient
-import dbreader
+from dbreader import mysqlMiner
 
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
@@ -83,11 +83,10 @@ def main():
 		# response = requests.delete('http://localhost:9200/projects')
 
 	reader = metaclient.reader(config['metadb']['connection_string'])
+	miner = mysqlMiner(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
 
-	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
+	columns = reader.getColumns(filter=Column.db_schema==options.db_catalog)
 	
-
-	print(len(columns))
 	for i,column in enumerate(columns):
 		actions = []
 
@@ -96,7 +95,7 @@ def main():
 		backspace(len(s))
 		print('')
 		
-		distinct_values = getDataFn(column=column)
+		distinct_values = miner.getDataForColumn(column=column)
 		
 		if distinct_values is None or len(distinct_values) == 0:
 			continue
