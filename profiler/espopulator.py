@@ -106,7 +106,7 @@ def main():
 		print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
 		quit()
        
-	es = Elasticsearch([config['es']['ip'] + ':' + config['es']['port']])
+	es = Elasticsearch([config['ec']['ip'] + ':' + config['ec']['port']])
 
 	reader = metaclient.reader(config['metadb']['connection_string'])
 

@@ -2,7 +2,7 @@ import sys
 sys.path.append("../common")
 sys.path.append("../api")
 
-from dbreader import mssqlMiner
+from dbreader import Factory
 from columnprocessor import NumpyColumnProcessor
 from columnprocessor import MssqlColumnProcessor
 from tableprocessor import MssqlTableProcessor
@@ -23,7 +23,7 @@ if len(config.sections()) == 0:
 def main():
 	sts = datetime.datetime.now()
 
-	miner = mssqlMiner(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
+	miner = Factory(type='pymssql').getInstance(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
 	writer = metaclient.writer(config['metadb']['connection_string'])
 
 	fks = miner.getForeignKeys()
@@ -82,11 +82,11 @@ def main():
 	print('tables processed, proceeding to write results to database ')
 
 	# uncomment this for actual writing to database
-	writer.writeTables(tables)
-	writer.writeColumns(columns)
-	writer.writePrimaryKeys(pks)
-	writer.writeForeignKeys(fks)
-	writer.close()
+	# writer.writeTables(tables)
+	# writer.writeColumns(columns)
+	# writer.writePrimaryKeys(pks)
+	# writer.writeForeignKeys(fks)
+	# writer.close()
 
 	print('time elapsed: ' + str(datetime.datetime.now() - sts))
 

@@ -3,8 +3,21 @@ from objects import ForeignKey, PrimaryKey, Table, Column
 import pymssql
 import pymysql
 
+class Factory():
+	def __init__(self, type='pymssql'):
+		self.type = type
+
+		self.classes = {
+			'pymssql': mssqlMiner,
+			'pymysql': mysqlMiner
+		}
+
+	def getInstance(self, db_catalog='', db_host='127.0.0.1', db_user='', db_password=''):	
+		return self.classes[self.type](db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
+
 class mysqlMiner():
-	def __init__(self, db_catalog='', db_host='127.0.0.1', db_user='sa', db_password=''):
+
+	def __init__(self, db_catalog='', db_host='127.0.0.1', db_user='', db_password=''):
 		self.db_catalog = db_catalog
 		self.db_host = db_host
 		self.db_user = db_user
@@ -108,7 +121,8 @@ class mysqlMiner():
 
 
 class mssqlMiner():
-	def __init__(self, db_catalog='', db_host='127.0.0.1', db_user='sa', db_password=''):
+
+	def __init__(self, db_catalog='', db_host='127.0.0.1', db_user='', db_password=''):
 		self.db_catalog = db_catalog
 		self.db_host = db_host
 		self.db_user = db_user

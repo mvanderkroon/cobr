@@ -1,258 +1,319 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+
+<head>
+	<link rel="stylesheet" type="text/css" href="forcelayout.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+</head>
 <style>
 body {
-    font: 10px Helvetica Neue, sans-serif;
-    background: #7f7f7f;
-    color:white;
+	/*font: 10px Helvetica Neue, sans-serif;*/
+	background: #7f7f7f;
+	/*color:white;*/
 }
 
-
 </style>
-<head>
-    <link rel="stylesheet" type="text/css" href="forcelayout.css">
-</head>
 <body>
-    <script src="d3.min.js"></script>
-    <script src="jquery-2.1.1.min.js"></script>
-    <script src="underscore-min.js"></script>
-    <script src="forcelayout.js"></script>
-    <script src="elasticsearch.js"></script>
+	<script src="d3.min.js"></script>
+	<script src="jquery-2.1.1.min.js"></script>
+	<script src="underscore-min.js"></script>
+	<script src="forcelayout.js"></script>
+	<script src="elasticsearch.js"></script>
 
-    <div id="filters">
-        node: <select id="nodeFilterBy" name="nodeFilterBy" onchange="doRender()">
-            <option>SF2015</option>
-            <option>sfdb</option>
-            <option>Sundb</option>
-            <option>X10DBASE</option>
-            <option>def</option>
-        </select>
-        link: <select id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
-            <option>explicit</option>
-            <option>implicit</option>
-        </select>
-    </div>
+	<div style="background-color:white;padding-top:20px;padding-bottom:30px;" onclick="">
+		<div class="form-horizontal" role="form">
+		  <div class="form-group">
+			<label for="inputEmail3" class="col-sm-2 control-label">Filter nodes by:</label>
+			<div class="col-sm-10" style="width:300px;">
+				<select class="form-control" id="nodeFilterBy" name="nodeFilterBy" onchange="doRender();">
+					<option>SF2015</option>
+					<option>sfdb</option>
+					<option>Sundb</option>
+					<option>X10DBASE</option>
+					<option>def</option>
+				</select>
+			</div>
+		  </div>
+		  <div class="form-group">
+			<label for="inputPassword3" class="col-sm-2 control-label">Filter links by:</label>
+			<div class="col-sm-10" style="width:300px;">
+			  	<select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
+					<option>explicit</option>
+					<option>implicit</option>
+				</select>
+			</div>
+		  </div>
+		  <div class="form-group">
+			<label for="inputEmail3" class="col-sm-2 control-label">Query:</label>
+			<div class="col-sm-10" style="width:300px;">
+			  <input type="search" class="form-control" id="ecQuery" placeholder="Query" onkeyup="handleEcQ();">
+			</div>
+		  </div>
+		</div>
+		<!-- <div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<div class="row">
+				  <div class="col-xs-2">
+				    <input type="text" class="form-control" placeholder=".col-xs-2">
+				  </div>
+				  <div class="col-xs-3">
+				    <input type="text" class="form-control" placeholder=".col-xs-3">
+				  </div>
+				  <div class="col-xs-4">
+				    <input type="text" class="form-control" placeholder=".col-xs-4">
+				  </div>
+				</div>
+			</div>
+		</div> -->
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<a id="controls">Hide</a>
+				<!-- <button type="submit" class="btn btn-default" id="controls">Hide</button> -->
+			</div>
+		</div>
+	</div>
 
-    tablename: <input type="search" id="nodeQuery" style="width:300px;" onkeyup="handleNQ();"></input><br/>
-    elasticsearch: <input type="search" id="ecQuery" style="width:300px;" onkeyup="handleEcQ();"></input><br/>
+	<!--
+	<div id="filters">
+		node: <select id="nodeFilterBy" name="nodeFilterBy" onchange="doRender()">
+			<option>SF2015</option>
+			<option>sfdb</option>
+			<option>Sundb</option>
+			<option>X10DBASE</option>
+			<option>def</option>
+		</select>
+		link: <select id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
+			<option>explicit</option>
+			<option>implicit</option>
+		</select>
+	</div>
 
-    <div id='forcelayout'></div>
+	tablename: <input type="search" id="nodeQuery" style="width:300px;" onkeyup="handleNQ();"></input><br/>
+	elasticsearch: <input type="search" id="ecQuery" style="width:300px;" onkeyup="handleEcQ();"></input><br/>
+ -->
+	<div id='forcelayout'></div>
 
-    <script>
+	<script>
 
-    var apihost = 'http://127.0.0.1:5000/api/';
-    var echost = 'localhost:9200';
+	$("#controls").click(function() {
+		$('html, body').animate({
+			scrollTop: $("#forcelayout").offset().top
+		}, 250);
+	});    
 
-    window.onload = function(){
-        doRender();
-    }
+	var apihost = 'http://127.0.0.1:5000/api/';
+	var echost = '127.0.0.1:9200';
 
-    var client = new elasticsearch.Client({
-        host: echost
-    });
+	window.onload = function(){
+		doRender();
+	}
 
-    var force;
-    var nodes = [];
-    var nodesdict = {};
-    var links = [];
+	var client = new elasticsearch.Client({
+		host: echost
+	});
 
-    var doRender = function() {
-        d3.select('#forcelayout').select('svg').remove('*');
+	var force;
+	var nodes = [];
+	var nodesdict = {};
+	var links = [];
 
-        var db = $('#nodeFilterBy').val();
-        var linkType = $('#linkFilterBy').val();
+	var doRender = function() {
+		d3.select('#forcelayout').select('svg').remove('*');
 
-        $.ajax({
-            url: apihost + 'mtable',
-            data: {
-                "q": JSON.stringify({
-                    "filters": [
-                    {
-                        "name": "db_catalog",
-                        "op": "eq",
-                        "val": db
-                    }
-                    ]
-                })
-            },
-            dataType: "json",
-            contentType: "application/json",
-            success: function(noderesult) {
-                nodes = noderesult.objects;
-    	    
-                // populate a quick lookup dictionary; will come in handy when populating the links
-                _.each(nodes, function(node, i) {
-                    var key = node.db_catalog + "" + node.db_schema + "" + node.tablename;
-                    nodesdict[key] = {
-                        'node': node,
-                        'index': i
-                    };
-                });
+		var db = $('#nodeFilterBy').val();
+		var linkType = $('#linkFilterBy').val();
 
-                $.ajax({
-                    url: apihost + 'mforeignkey',
-                    data: {
-                        "q": JSON.stringify({
-                            "filters": [
-                                    {
-                                        "name": "type",
-                                        "op": "eq",
-                                        "val": linkType
-                                    }
-                                    , 
-                                    {
-                                        "name": "db_catalog",
-                                        "op": "eq",
-                                        "val": db
-                                    }
-                                ]
-                                ,
-                                "disjunction": false
-                        }
-                        )
-                    },
-                    dataType: "json",
-                    contentType: "application/json",
-                    success: function(linkresult) {
-                        links = linkresult.objects;
+		$.ajax({
+			url: apihost + 'mtable',
+			data: {
+				"q": JSON.stringify({
+					"filters": [
+					{
+						"name": "db_catalog",
+						"op": "eq",
+						"val": db
+					}
+					]
+				})
+			},
+			dataType: "json",
+			contentType: "application/json",
+			success: function(noderesult) {
+				nodes = noderesult.objects;
+			
+				// populate a quick lookup dictionary; will come in handy when populating the links
+				_.each(nodes, function(node, i) {
+					var key = node.db_catalog + "" + node.db_schema + "" + node.tablename;
+					nodesdict[key] = {
+						'node': node,
+						'index': i
+					};
+				});
 
-                        // populate the network using the nodedict and links
-                        _.each(links, function(link) {
-                            var srcKey = link.db_catalog + "" + link.pkdb_schema + "" + link.pktablename;
-                            var tarKey = link.db_catalog + "" + link.fkdb_schema + "" + link.fktablename;
+				$.ajax({
+					url: apihost + 'mforeignkey',
+					data: {
+						"q": JSON.stringify({
+							"filters": [
+									{
+										"name": "type",
+										"op": "eq",
+										"val": linkType
+									}
+									, 
+									{
+										"name": "db_catalog",
+										"op": "eq",
+										"val": db
+									}
+								]
+								,
+								"disjunction": false
+						}
+						)
+					},
+					dataType: "json",
+					contentType: "application/json",
+					success: function(linkresult) {
+						links = linkresult.objects;
 
-                            var srcNode = nodesdict[srcKey];
-                            var tarNode = nodesdict[tarKey];
+						// populate the network using the nodedict and links
+						_.each(links, function(link) {
+							var srcKey = link.db_catalog + "" + link.pkdb_schema + "" + link.pktablename;
+							var tarKey = link.db_catalog + "" + link.fkdb_schema + "" + link.fktablename;
 
-                            link['source'] = srcNode.index;
-                            link['target'] = tarNode.index;
-                            link['value'] = 1;
+							var srcNode = nodesdict[srcKey];
+							var tarNode = nodesdict[tarKey];
 
-                            // console.log(srcNode.weight)
-                            // console.log(tarNode.weight)
-                            // console.log('')
-                        });
+							link['source'] = srcNode.index;
+							link['target'] = tarNode.index;
+							link['value'] = 1;
 
-                        force = forcelayout({
-                            'parent': '#forcelayout'
-                        });
+							// console.log(srcNode.weight)
+							// console.log(tarNode.weight)
+							// console.log('')
+						});
 
-                        force.render({
-                            'nodes': nodes,
-                            'links': links
-                        });
-                    }
-                });
-            }
-        });
-    };
-    
-    var handleNQ = function(e) {
-        if (!e) e = window.event;
+						force = forcelayout({
+							'parent': '#forcelayout'
+						});
 
-        var keyCode = e.keyCode || e.which;
+						force.render({
+							'nodes': nodes,
+							'links': links
+						});
+					}
+				});
+			}
+		});
+	};
+	
+	var handleNQ = function(e) {
+		if (!e) e = window.event;
 
-        if (keyCode == 13) {
-            var t = $('#nodeQuery')[0].value.toLowerCase();
+		var keyCode = e.keyCode || e.which;
 
-            if (t.length <= 0) {
-                force.unhighlightNodes();
-                force.unhighlightLinks();
-                return;
-            }
+		if (keyCode == 13) {
+			var t = $('#nodeQuery')[0].value.toLowerCase();
 
-            var re = new RegExp(t);
-            var nodeLst = [];
-            var linkLst = [];
+			if (t.length <= 0) {
+				force.unhighlightNodes();
+				force.unhighlightLinks();
+				return;
+			}
 
-            for (var i in nodesdict) {
-                var obj = nodesdict[i];
-                
-                if (re.test(obj.node.tablename.toLowerCase())) {
-                    nodeLst.push(obj.node);
-                }
-            }
+			var re = new RegExp(t);
+			var nodeLst = [];
+			var linkLst = [];
 
-            for (var i in links) {
-                var link = links[i];
+			for (var i in nodesdict) {
+				var obj = nodesdict[i];
+				
+				if (re.test(obj.node.tablename.toLowerCase())) {
+					nodeLst.push(obj.node);
+				}
+			}
 
-                if (re.test(link.source.tablename.toLowerCase()) || re.test(link.target.tablename.toLowerCase())) {
-                    linkLst.push(link);
-                }
-            }
+			for (var i in links) {
+				var link = links[i];
 
-            force.highlightNodes(nodeLst);
-            force.highlightLinks(linkLst);
-        } else if (keyCode == 27) {
-           force.unhighlightNodes();
-           force.unhighlightLinks();
-        }
-    }
+				if (re.test(link.source.tablename.toLowerCase()) || re.test(link.target.tablename.toLowerCase())) {
+					linkLst.push(link);
+				}
+			}
 
-    var handleEcQ = function(e) {
-        if (!e) e = window.event;
+			force.highlightNodes(nodeLst);
+			force.highlightLinks(linkLst);
+		} else if (keyCode == 27) {
+		   force.unhighlightNodes();
+		   force.unhighlightLinks();
+		}
+	}
 
-        var keyCode = e.keyCode || e.which;
+	var handleEcQ = function(e) {
+		if (!e) e = window.event;
 
-        if (keyCode == 13) { // 'enter' pressed
-            var query = $('#ecQuery')[0].value.toLowerCase();
+		var keyCode = e.keyCode || e.which;
 
-            if (query.length <= 0) {
-                force.unhighlightNodes();
-                force.unhighlightLinks();
-                return;
-            }
-            
-            var nodeLst = [];
-            var linkLst = [];
+		if (keyCode == 13) { // 'enter' pressed
+			var query = $('#ecQuery')[0].value.toLowerCase();
 
-            client.search({
-                index: 'projects',
-                type: 'fb',
-                body: {
-                    query: {
-                            match: {
-                            value: query
-                        }
-                    }
-                }
-            }).then(function (body) {
-                
-                var hits = body.hits.hits;
+			if (query.length <= 0) {
+				force.unhighlightNodes();
+				force.unhighlightLinks();
+				return;
+			}
+			
+			var nodeLst = [];
+			var linkLst = [];
 
-                for (var hi in hits) {
-                    var hit = hits[hi];
+			client.search({
+				index: 'projects',
+				type: 'fb',
+				body: {
+					query: {
+							match: {
+							value: query
+						}
+					}
+				}
+			}).then(function (body) {
+				
+				var hits = body.hits.hits;
 
-                    for (var i in nodesdict) {
-                        var obj = nodesdict[i];
-                        var node = obj.node;
-                        
-                        if (hit._source.db_catalog == node.db_catalog && hit._source.db_schema == node.db_schema && hit._source.tablename == node.tablename) {
-                            nodeLst.push(obj.node);
-                        }
-                    }
+				for (var hi in hits) {
+					var hit = hits[hi];
 
-                    for (var i in links) {
-                        var link = links[i];
+					for (var i in nodesdict) {
+						var obj = nodesdict[i];
+						var node = obj.node;
+						
+						if (hit._source.db_catalog == node.db_catalog && hit._source.db_schema == node.db_schema && hit._source.tablename == node.tablename) {
+							nodeLst.push(obj.node);
+						}
+					}
 
-                        if (hit._source.db_catalog == link.source.db_catalog && hit._source.db_schema == link.source.db_schema && hit._source.tablename == link.source.tablename || hit._source.db_catalog == link.target.db_catalog && hit._source.db_schema == link.target.db_schema && hit._source.tablename == link.target.tablename) {
-                            linkLst.push(link);
-                        }
-                    }
-                }
+					for (var i in links) {
+						var link = links[i];
 
-                force.highlightNodes(nodeLst);
-                force.highlightLinks(linkLst);
+						if (hit._source.db_catalog == link.source.db_catalog && hit._source.db_schema == link.source.db_schema && hit._source.tablename == link.source.tablename || hit._source.db_catalog == link.target.db_catalog && hit._source.db_schema == link.target.db_schema && hit._source.tablename == link.target.tablename) {
+							linkLst.push(link);
+						}
+					}
+				}
 
-            }, function (error) {
-                // console.trace(error.message);
-            });
-        } else if (keyCode == 27) { // 'esc' pressed
-            force.unhighlightNodes();
-            force.unhighlightLinks();
-        }
-    }
+				force.highlightNodes(nodeLst);
+				force.highlightLinks(linkLst);
 
-    </script>
+			}, function (error) {
+				// console.trace(error.message);
+			});
+		} else if (keyCode == 27) { // 'esc' pressed
+			force.unhighlightNodes();
+			force.unhighlightLinks();
+		}
+	}
+
+	</script>
 
 </body>
