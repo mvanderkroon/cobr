@@ -30,7 +30,7 @@ body {
 					<option>sfdb</option>
 					<option>Sundb</option>
 					<option>X10DBASE</option>
-					<option>def</option>
+					<option>sakila</option>
 				</select>
 			</div>
 		  </div>
@@ -281,6 +281,7 @@ body {
 				
 				var hits = body.hits.hits;
 
+				console.log(hits);
 				for (var hi in hits) {
 					var hit = hits[hi];
 

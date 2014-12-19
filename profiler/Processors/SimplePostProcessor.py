@@ -1,11 +1,4 @@
-import sys
-sys.path.append("../common")
-
-from objects import ForeignKey, PrimaryKey, Table, Column
-import pymssql
-import numpy as np
-
-class PostProcessor():
+class SimplePostProcessor():
 	def __init__(self, tables=[], columns=[], explicit_foreignkeys=[], explicit_primarykeys=[], implicit_foreignkeys=[], implicit_primarykeys=[]):
 		self.tables = tables
 		self.columns = columns
