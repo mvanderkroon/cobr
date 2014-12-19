@@ -40,6 +40,28 @@ class MssqlMetaMiner():
 						TABLE_NAME = '{2}'""".format(table.db_catalog, table.db_schema, table.tablename))
 				retval = cursor.fetchone()[0]
 		return retval
+	
+	def getDataForTable(self, table=None, verbose=False):
+		if table is None:
+			return
+
+		retval = []
+		with pymssql.connect(options.db_host, options.db_user, options.db_password, options.db_catalog) as conn:
+			with conn.cursor(as_dict=True) as cursor:
+				query = """
+					SELECT 
+						*
+					FROM 
+						[{0}].[{1}]
+					""".format(table.db_catalog, table.tablename)
+				
+				if verbose:
+					print(query)
+					print('')
+
+				cursor.execute(query)
+				retval = [ d for d in cursor.fetchall() ]
+		return retval
 
 	def getDataForColumn(self, column=None, verbose=False):
 		if column is None:

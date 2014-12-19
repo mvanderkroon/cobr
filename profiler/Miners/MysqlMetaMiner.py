@@ -37,7 +37,36 @@ class MysqlMetaMiner():
 			retval = cursor.fetchone()[0]
 		return retval
 
-	def getDataForColumn(self, column=None, verbose=False, distinct=False, order=None):
+	def getDataForTable(self, table=None, verbose=False, distinct=False, order=None):
+		if table is None:
+			return
+
+		retval = []
+		conn = pymysql.connect(host=self.db_host, user=self.db_user, passwd=self.db_password, db=table.db_schema)
+		cursor = conn.cursor(pymysql.cursors.DictCursor)
+		try:
+			query = """
+				SELECT 
+					*
+				FROM 
+					`{0}`.`{1}`
+				""".format(table.db_catalog, table.tablename)
+			
+			if verbose:
+				print(query)
+				print('')
+
+			cursor.execute(query)
+			retval = [ d for d in cursor.fetchall() ]
+		except Exception as e:
+			print(e)
+		finally:
+			conn.close()
+			cursor.close()
+			
+		return retval
+
+	def getDataForColumn(self, column=None, verbose=False):
 		if column is None:
 			return None
 

@@ -3,7 +3,9 @@ from __future__ import print_function
 import sys
 sys.path.append("../common")
 sys.path.append("../api")
+sys.path.append("Miners")
 import metaclient
+from MetaMiner import MetaMiner
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
 
 import os
@@ -23,32 +25,11 @@ parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string
 (options, args) = parser.parse_args()
 
 class Discovery():
-    def __init__(self, tables=[], columns=[], colseparator='|'):
+    def __init__(self, tables=[], columns=[], colseparator='|', getDataFn=None):
         self.tables = tables
         self.columns = columns
         self.colseparator = colseparator
-
-    def getDataFn(self, table=None, verbose=False):
-        if table is None:
-            return
-
-        retval = []
-        with pymssql.connect(options.db_host, options.db_user, options.db_password, options.db_catalog) as conn:
-            with conn.cursor(as_dict=True) as cursor:
-                query = """
-                    SELECT 
-                        *
-                    FROM 
-                        [{0}].[{1}]
-                    """.format(table.db_schema, table.tablename)
-                
-                if verbose:
-                    print(query)
-                    print('')
-
-                cursor.execute(query)
-                retval = [ d for d in cursor.fetchall() ]
-        return retval
+        self.getDataFn = getDataFn
 
     def discoverpks(self):
         excluded_fields = ['text']
@@ -158,12 +139,13 @@ def main():
         quit()
 
     reader = metaclient.reader(config['metadb']['connection_string'])
+    miner = MetaMiner(type='pymysql').getInstance(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
 
     # filter syntax, see sqlalchemy documentation
     tables = reader.getTables(filter=Table.db_catalog==options.db_catalog)
     columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
 
-    disc = Discovery(tables=tables, columns=columns)
+    disc = Discovery(tables=tables, columns=columns, getDataFn=miner.getDataForTable)
     pks = disc.discoverpks()
 
     writer = metaclient.writer(config['metadb']['connection_string'])
