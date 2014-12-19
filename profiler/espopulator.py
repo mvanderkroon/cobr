@@ -13,8 +13,10 @@ import pymssql
 import configparser
 
 import json
+import datetime
 
 from optparse import OptionParser
+from multiprocessing import Pool
 
 parser = OptionParser()
 parser.add_option("-i", "--host", dest="db_host", help="", metavar="string")
@@ -24,60 +26,55 @@ parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string
 # parser.add_option("-t", "--truncate", dest="truncate", help="", metavar="boolean", default=False)
 (options, args) = parser.parse_args()
 
-def execute(columns=[], getDataFn=None, es=None):
-	print('## espopulator started')
-	print('\n'*4)
-	for i,column in enumerate(columns):
-		actions = []		
-		distinct_values = getDataFn(column=column, distinct=True)
-		
-		if distinct_values is None or len(distinct_values) == 0:
-			continue
+config = configparser.ConfigParser()
+config.read('config.ini')
+if len(config.sections()) == 0:
+	print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
+	quit()
 
-		for j,value in enumerate(distinct_values):
-			sys.stdout.write("\033[4A")
+esIp = config['es']['ip']
+esPort = config['es']['port']
 
-			totalprogress = "\r\033[Ktotal progress {0}/{1}: {2:.2f}% \n".format(i, len(columns), round(i/len(columns)*100,2))
-			sys.stdout.write(totalprogress)
-			sys.stdout.flush()
-			currenttab = "\r\033[Ktable: {0}.{1}.{2} \n".format(column.db_catalog, column.db_schema, column.tablename)
-			sys.stdout.write(currenttab)
-			sys.stdout.flush()
-			currentcol = "\r\033[Kcolumn: {0} \n".format(column.columnname)
-			sys.stdout.write(currentcol)
-			sys.stdout.flush()
-			valueprogress = "\r\033[Kvalueprogress {0}/{1}: {2:.2f}% \n".format(j, len(distinct_values), round(j/len(distinct_values)*100,2))
-			sys.stdout.write(valueprogress)
-			sys.stdout.flush()
+db_host = options.db_host
+db_user = options.db_user
+db_password = options.db_password
+db_catalog = options.db_catalog
 
-			actions.append({
-				"_index": "projects",
-				"_type": "fb",
-				"value": str(value),
-				"tablename": column.tablename,
-				"columnname": column.columnname,
-				"db_catalog": column.db_catalog,
-				"db_schema": column.db_schema,
-				"datatype": column.datatype
-			})
-		helpers.bulk(es, actions)
+metadb_connectionstring = config['metadb']['connection_string']
+
+def executeOne(column=None):
+	es = Elasticsearch(str(esIp) + ':' + str(esPort))
+
+	actions = []
+	miner = MetaMiner(type='pymysql').getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
+	values = miner.getDataForColumn(column=column, distinct=True)
+
+	for j,value in enumerate(values):
+		actions.append({
+			"_index": "projects",
+			"_type": "fb",
+			"value": str(value),
+			"tablename": column.tablename,
+			"columnname": column.columnname,
+			"db_catalog": column.db_catalog,
+			"db_schema": column.db_schema,
+			"datatype": column.datatype
+		})
+	helpers.bulk(es, actions)
 
 def main():
-	config = configparser.ConfigParser()
-	config.read('config.ini')
-	if len(config.sections()) == 0:
-		print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-		quit()
-       
-	es = Elasticsearch([config['es']['ip'] + ':' + config['es']['port']])
+	sts = datetime.datetime.now()
 
-	reader = metaclient.reader(config['metadb']['connection_string'])
-	miner = MetaMiner(type='pymysql').getInstance(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
+	pool = Pool(processes=4)
 
-	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
-	execute(columns=columns, getDataFn=miner.getDataForColumn, es=es)
+	# get columns from the meta database
+	columns = metaclient.reader(metadb_connectionstring).getColumns(filter=Column.db_catalog==options.db_catalog)
+
+	# execute on multiple threads
+	pool.map(executeOne, columns)
 	
-	print('DONE.')
+	print('DONE.' )
+	print('time elapsed: ' + str(datetime.datetime.now() - sts))
 
 if __name__ == '__main__':
 	main()

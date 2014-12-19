@@ -66,7 +66,7 @@ class MysqlMetaMiner():
 			
 		return retval
 
-	def getDataForColumn(self, column=None, verbose=False):
+	def getDataForColumn(self, column=None, verbose=False, distinct=False, order=None):
 		if column is None:
 			return None
 
@@ -75,7 +75,7 @@ class MysqlMetaMiner():
 			distinctStr = 'DISTINCT '
 
 		orderByStr = ''
-		if orderByStr:
+		if order:
 			orderByStr = 'ORDER BY `{0}` {1} '.format(column.columnname, order)
 		
 		retval = []
