@@ -2,7 +2,7 @@
 * database profiling
 * implicit primary key detection
 * implicit foreign key detection
-* visual database metamodel explorative analysis
+* database metamodel visualization
 * deep database search (Elastic Search over each distinct value, of each column, of each table)
 * sequence mining
 
@@ -28,7 +28,15 @@
 * pip install requests
 
 # Profiling
-First, create a `config.ini` file by copying the `template_config.ini` file and filling in the empty fields. [subjectdb] represents the database you will be profiling, [metadb] represents the database where profiling results will be stored and [ec] containts ElastiC search specific options.
+First, create a `config.ini` file by copying the `template_config.ini` file and filling in the empty fields. [subjectdb] represents the database you will be profiling, [metadb] represents the database where profiling results will be stored and [es] containts Elastic Search  options.
 
 * `workon dev3.4`
 * `python profiler/profiler.py`
+
+# Implicit primary key detection
+* `python profiler/primarykey_detection.py -i <db_host> -u <db_user> -p <db_passwd> -c <db_catalog>`
+
+# Implicit foreign key detection
+* `python profiler/foreignkey_detection.py -i <db_host> -u <db_user> -p <db_passwd> -c <db_catalog>`
+
+# Database metamodel visualization
