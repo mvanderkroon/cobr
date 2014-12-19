@@ -2,7 +2,6 @@ import sys
 sys.path.append("../common")
 sys.path.append("../api")
 
-
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
 import metaclient
 import mssql_connector
