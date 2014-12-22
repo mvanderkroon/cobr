@@ -256,6 +256,7 @@ body {
 
 		if (keyCode == 13) { // 'enter' pressed
 			var query = $('#ecQuery')[0].value.toLowerCase();
+			var db = $('#nodeFilterBy').val();
 
 			if (query.length <= 0) {
 				force.unhighlightNodes();
@@ -271,10 +272,10 @@ body {
 				type: 'fb',
 				body: {
 					query: {
-							match: {
-							value: query
-						}
-					}
+				        query_string: {
+				          query: "(value:"+query+") AND (db_catalog:"+db+")"
+				        }
+				    }
 				}
 			}).then(function (body) {
 				
