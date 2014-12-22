@@ -20,6 +20,8 @@ body {
 	<script src="forcelayout.js"></script>
 	<script src="elasticsearch.js"></script>
 
+	<script src="config.js"></script>
+
 	<div style="background-color:white;padding-top:20px;padding-bottom:30px;" onclick="">
 		<div class="form-horizontal" role="form">
 		  <div class="form-group">
@@ -99,10 +101,7 @@ body {
 		$('html, body').animate({
 			scrollTop: $("#forcelayout").offset().top
 		}, 250);
-	});    
-
-	var apihost = 'http://127.0.0.1:5000/api/';
-	var echost = '127.0.0.1:9200';
+	});
 
 	window.onload = function(){
 		doRender();

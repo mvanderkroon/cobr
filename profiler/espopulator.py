@@ -69,12 +69,20 @@ def main():
 
 	# get columns from the meta database
 	columns = metaclient.reader(metadb_connectionstring).getColumns(filter=Column.db_catalog==options.db_catalog)
+	print('## going to populate Elastic Search with {0} columns'.format(len(columns)-1))
+	print('\n'*1)
 
 	# execute on multiple threads
-	pool.map(executeOne, columns)
+	for i, _ in enumerate(pool.imap_unordered(executeOne, columns)):
+		sys.stdout.write("\033[1A")
+
+		totalprogress = "\r\033[K## progress {0}/{1}: {2:.2f}% \n".format(i, len(columns)-1, round(i/(len(columns)-1)*100,2))
+		sys.stdout.write(totalprogress)
+		sys.stdout.flush()
 	
-	print('DONE.' )
-	print('time elapsed: ' + str(datetime.datetime.now() - sts))
+	print('')	
+	print('## DONE.' )
+	print('## time elapsed: {0}'.format(str(datetime.datetime.now() - sts)))
 
 if __name__ == '__main__':
 	main()
