@@ -23,6 +23,7 @@ parser.add_option("-i", "--host", dest="db_host", help="", metavar="string")
 parser.add_option("-u", "--user", dest="db_user", help="", metavar="string")
 parser.add_option("-p", "--password", dest="db_password", help="", metavar="string")
 parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string")
+parser.add_option("-d", "--db_dialect", dest="db_dialect", help="'pymssql' or 'pymysql'", metavar="string")
 # parser.add_option("-t", "--truncate", dest="truncate", help="", metavar="boolean", default=False)
 (options, args) = parser.parse_args()
 
@@ -39,6 +40,7 @@ db_host = options.db_host
 db_user = options.db_user
 db_password = options.db_password
 db_catalog = options.db_catalog
+db_dialect = options.db_dialect
 
 metadb_connectionstring = config['metadb']['connection_string']
 
@@ -46,8 +48,8 @@ def executeOne(column=None):
 	es = Elasticsearch(str(esIp) + ':' + str(esPort))
 
 	actions = []
-	miner = MetaMiner(type='pymysql').getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
-	values = miner.getDataForColumn(column=column, distinct=True)
+	miner = MetaMiner(type=db_dialect).getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
+	values = miner.getDataForColumn(column=column, distinct=True, verbose=True)
 
 	for j,value in enumerate(values):
 		actions.append({

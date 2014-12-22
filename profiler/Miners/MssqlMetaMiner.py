@@ -63,21 +63,34 @@ class MssqlMetaMiner():
 				retval = [ d for d in cursor.fetchall() ]
 		return retval
 
-	def getDataForColumn(self, column=None, verbose=False):
+	def getDataForColumn(self, column=None, verbose=False, distinct=False, order=None):
 		if column is None:
 			return None
 
 		# print('getting data for: {0}.{1} -- {2} '.format(column.db_schema, column.tablename, column.columnname))
 
 		tdict = {}
-		tdict['image'] = "CAST(CAST([{0}] AS BINARY) AS NVARCHAR(MAX))"
-		tdict['text'] = "CAST([{0}] AS NVARCHAR(MAX))"
-		tdict['ntext'] = "CAST([{0}] AS NVARCHAR(MAX))"
+		tdict['image'] = ' CAST(CAST([{0}] AS BINARY) AS NVARCHAR(MAX)) '
+		tdict['text'] = ' CAST([{0}] AS NVARCHAR(MAX)) '
+		tdict['ntext'] = ' CAST([{0}] AS NVARCHAR(MAX)) '
 
-		selectclause = "[{0}]".format(column.columnname)		
+		selectclause = ''
+		if distinct:
+			selectclause += ' \nDISTINCT '
+
 		if column.datatype in tdict:
-			selectclause = tdict[column.datatype].format(column.columnname)
-		
+			selectclause += tdict[column.datatype].format(column.columnname)
+		else:
+			selectclause += " [{0}] ".format(column.columnname)
+
+		orderByStr = ''
+		if order:
+			
+			if column.datatype in tdict:
+				orderByStr = 'ORDER BY {0} {1} '.format(tdict[column.datatype].format(column.columnname), order)
+			else:
+				orderByStr = 'ORDER BY [{0}] {1} '.format(column.columnname, order)
+
 		retval = []
 		with pymssql.connect(self.db_host, self.db_user, self.db_password, self.db_catalog) as conn:
 			with conn.cursor() as cursor:
@@ -86,8 +99,8 @@ class MssqlMetaMiner():
 						{0}
 					FROM 
 						[{1}].[{2}]
-					ORDER BY {0} ASC
-					""".format(selectclause, column.db_schema, column.tablename)
+					{3}
+					""".format(selectclause, column.db_schema, column.tablename, orderByStr)
 				
 				if verbose:
 					print(query)
