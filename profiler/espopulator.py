@@ -49,7 +49,7 @@ def executeOne(column=None):
 
 	actions = []
 	miner = MetaMiner(type=db_dialect).getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
-	values = miner.getDataForColumn(column=column, distinct=True, verbose=True)
+	values = miner.getDataForColumn(column=column, distinct=True)
 
 	for j,value in enumerate(values):
 		actions.append({
