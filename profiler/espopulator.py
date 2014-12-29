@@ -47,30 +47,33 @@ metadb_connectionstring = config['metadb']['connection_string']
 excluded = ['image']
 
 def executeOne(column=None):
-	if column.datatype not in excluded:
-		es = Elasticsearch(host=str(esIp), port=str(esPort), timeout=120)
+	try:
+		if column.datatype not in excluded:
+			es = Elasticsearch(host=str(esIp), port=str(esPort), timeout=240)
 
-		actions = []
-		miner = MetaMiner(type=db_dialect).getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
-		values = miner.getDataForColumn(column=column, distinct=True)
+			actions = []
+			miner = MetaMiner(type=db_dialect).getInstance(db_catalog=db_catalog, db_host=db_host, db_user=db_user, db_password=db_password)
+			values = miner.getDataForColumn(column=column, distinct=True)
 
-		for j,value in enumerate(values):
-			actions.append({
-				"_index": "projects",
-				"_type": "fb",
-				"value": str(value),
-				"tablename": column.tablename,
-				"columnname": column.columnname,
-				"db_catalog": column.db_catalog,
-				"db_schema": column.db_schema,
-				"datatype": column.datatype
-			})
-		helpers.bulk(es, actions)
+			for j,value in enumerate(values):
+				actions.append({
+					"_index": "projects",
+					"_type": "fb",
+					"value": str(value),
+					"tablename": column.tablename,
+					"columnname": column.columnname,
+					"db_catalog": column.db_catalog,
+					"db_schema": column.db_schema,
+					"datatype": column.datatype
+				})
+			helpers.bulk(es, actions)
+	except Exception as e:
+		print(e)
 
 def main():
 	sts = datetime.datetime.now()
 
-	pool = Pool(processes=64)
+	pool = Pool(processes=32)
 
 	# get columns from the meta database
 	columns = metaclient.reader(metadb_connectionstring).getColumns(filter=Column.db_catalog==options.db_catalog)
