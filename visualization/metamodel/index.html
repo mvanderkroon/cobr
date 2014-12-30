@@ -16,6 +16,21 @@ body {
 	padding:20px;
 	background-color:white;
 }
+
+.histogram .bar rect {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
+
+.histogram .bar text {
+  fill: #fff;
+}
+
+.histogram .axis path, .axis line {
+  fill: none;
+  stroke: none;
+  shape-rendering: crispEdges;
+}
 </style>
 
 <body>
@@ -25,6 +40,7 @@ body {
     <script src="forcelayout.js"></script>
     <script src="elasticsearch.js"></script>
     <script src="donut.js"></script>
+    <script src="histogram.js"></script>
 
     <script src="config.js"></script>
 
@@ -131,10 +147,12 @@ body {
 		        <div class="col-md-10">
 		        	<div class="row">
 			        	<div class="col-md-2">
-				        	<div id="donut0" style="width:120px;height:120px;"></div>    
+				        	<div id="donut0" style="width:120px;height:120px;"></div>
 				        </div>
-				        <div class="col-md-10">
-				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        <div class="col-md-2">
+				        	<div id="histogram0" class="histogram" style="width:280px;height:120px;"></div>
+				        </div>
+				        <div class="col-md-8">
 				        </div>
 		        	</div>
 		        	
@@ -149,10 +167,12 @@ body {
 		        <div class="col-md-10">
 		        	<div class="row">
 			        	<div class="col-md-2">
-				        	<div id="donut1" style="width:120px;height:120px;"></div>    
+				        	<div id="donut1" style="width:120px;height:120px;"></div>
 				        </div>
-				        <div class="col-md-10">
-				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        <div class="col-md-2">
+				        	<div id="histogram1" class="histogram" style="width:280px;height:120px;"></div>
+				        </div>
+				        <div class="col-md-8">
 				        </div>
 		        	</div>
 		        	
@@ -167,10 +187,12 @@ body {
 		        <div class="col-md-10">
 		        	<div class="row">
 			        	<div class="col-md-2">
-				        	<div id="donut2" style="width:120px;height:120px;"></div>    
+				        	<div id="donut2" style="width:120px;height:120px;"></div>
 				        </div>
-				        <div class="col-md-10">
-				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        <div class="col-md-2">
+				        	<div id="histogram2" class="histogram" style="width:280px;height:120px;"></div>
+				        </div>
+				        <div class="col-md-8">
 				        </div>
 		        	</div>
 		        	
@@ -208,6 +230,36 @@ body {
 
         var d = donut({'parent':'#donut2'});
         d.render([ { category:'null', value:40 },
+                { category:'positive', value:20 },
+                { category:'negative', value:10 },
+                { category:'zero', value:35 }
+        ]);
+
+        var h = histogram({
+        		'parent':'#histogram0',
+				'variable': 'category'
+			});
+        h.render([ { category:'null', value:10 },
+                { category:'positive', value:20 },
+                { category:'negative', value:40 },
+                { category:'zero', value:35 }
+        ]);
+
+        var h = histogram({
+        		'parent':'#histogram1',
+				'variable': 'category'
+			});
+        h.render([ { category:'null', value:59 },
+                { category:'positive', value:12 },
+                { category:'negative', value:56 },
+                { category:'zero', value:100 }
+        ]);
+
+        var h = histogram({
+        		'parent':'#histogram2',
+				'variable': 'category'
+			});
+        h.render([ { category:'null', value:40 },
                 { category:'positive', value:20 },
                 { category:'negative', value:10 },
                 { category:'zero', value:35 }
