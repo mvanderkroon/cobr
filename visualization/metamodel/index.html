@@ -24,6 +24,7 @@ body {
     <script src="underscore-min.js"></script>
     <script src="forcelayout.js"></script>
     <script src="elasticsearch.js"></script>
+    <script src="donut.js"></script>
 
     <script src="config.js"></script>
 
@@ -32,7 +33,7 @@ body {
             <div class="form-horizontal" role="form">
                 <div class="form-group">
                     <label for="selectNodeFilter" class="col-sm-4 control-label">Filter nodes by:</label>
-                    <div class="col-sm-8" style="width:300px;">
+                    <div class="col-sm-8">
                         <select class="form-control" id="nodeFilterBy" name="nodeFilterBy" onchange="doRender();">
                             <option>SF2015</option>
                             <option>sfdb</option>
@@ -44,7 +45,7 @@ body {
                 </div>
                 <div class="form-group">
                     <label for="selectLinkFilter" class="col-sm-4 control-label">Filter links by:</label>
-                    <div class="col-sm-8" style="width:300px;">
+                    <div class="col-sm-8">
                         <select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
                             <option>explicit</option>
                             <option>implicit</option>
@@ -53,7 +54,7 @@ body {
                 </div>
                 <div class="form-group">
                     <label for="inputQuery" class="col-sm-4 control-label">Query:</label>
-                    <div class="col-sm-8" style="width:300px;">
+                    <div class="col-sm-8">
                         <input type="search" class="form-control" id="ecQuery" placeholder="Query" onkeyup="handleEsQ();">
                     </div>
                 </div>
@@ -69,13 +70,13 @@ body {
         	<div class="form-horizontal" role="form">
                 <div class="form-group">
                     <label for="inputDatabaseHost" class="col-sm-4 control-label">Database host:</label>
-                    <div class="col-sm-8" style="width:300px;">
+                    <div class="col-sm-8">
                         <input type="text" class="form-control" id="dbHost" placeholder="127.0.0.1:5000" onkeyup="">
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputElasticSearchHost" class="col-sm-4 control-label">Elastic Search host:</label>
-                    <div class="col-sm-8" style="width:300px;">
+                    <div class="col-sm-8">
                         <input type="text" class="form-control" id="esHost" placeholder="127.0.0.1:9200" onkeyup="">
                     </div>
                 </div>
@@ -109,21 +110,73 @@ body {
  -->
     <div id='forcelayout'></div>
 
-    <div class="row" style="background-color:white;">
-        <div class="col-md-2">
-            <a>column 1</a>
-            <br/>
-            <a>column 2</a>
-            <br/>
-            <a>column 3</a>
-            <br/>
-            <a>column 4</a>
-            <br/>
-            <a>column 5</a>
-            <br/>
+    <div class="row">
+    	<div class="col-md-3">
+    		
+    	</div>
+    	<div class="col-md-9">
+    		<h1>Aanvragen</h1>
+    	</div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <h2>Numerical</h2>
         </div>
-        <div class="col-md-10">
-            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+        <div class="col-md-11">
+        	<div class="row">
+        		<div class="col-md-2">
+		            <p><b>id</b></p>
+		            <p>integer</p>
+		        </div>
+		        <div class="col-md-10">
+		        	<div class="row">
+			        	<div class="col-md-2">
+				        	<div id="donut0" style="width:120px;height:120px;"></div>    
+				        </div>
+				        <div class="col-md-10">
+				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        </div>
+		        	</div>
+		        	
+	            	
+		        </div>
+            </div>
+            <div class="row">
+        		<div class="col-md-2">
+		            <p><b>leeftijd</b></p>
+		            <p>integer</p>
+		        </div>
+		        <div class="col-md-10">
+		        	<div class="row">
+			        	<div class="col-md-2">
+				        	<div id="donut1" style="width:120px;height:120px;"></div>    
+				        </div>
+				        <div class="col-md-10">
+				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        </div>
+		        	</div>
+		        	
+	            	
+		        </div>
+            </div>
+            <div class="row">
+        		<div class="col-md-2">
+		            <p><b>verzamelinkomen</b></p>
+		            <p>integer</p>
+		        </div>
+		        <div class="col-md-10">
+		        	<div class="row">
+			        	<div class="col-md-2">
+				        	<div id="donut2" style="width:120px;height:120px;"></div>    
+				        </div>
+				        <div class="col-md-10">
+				        	<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+				        </div>
+		        	</div>
+		        	
+	            	
+		        </div>
+            </div>
         </div>
     </div>
 
@@ -138,6 +191,27 @@ body {
         doRender();
         $("#dbHost").val(apihost);
         $("#esHost").val(eshost);
+
+        var d = donut({'parent':'#donut0'});
+        d.render([ { category:'null', value:10 },
+                { category:'positive', value:20 },
+                { category:'negative', value:40 },
+                { category:'zero', value:35 }
+        ]);
+
+        var d = donut({'parent':'#donut1'});
+        d.render([ { category:'null', value:59 },
+                { category:'positive', value:12 },
+                { category:'negative', value:56 },
+                { category:'zero', value:100 }
+        ]);
+
+        var d = donut({'parent':'#donut2'});
+        d.render([ { category:'null', value:40 },
+                { category:'positive', value:20 },
+                { category:'negative', value:10 },
+                { category:'zero', value:35 }
+        ]);
     }
 
     var client = new elasticsearch.Client({

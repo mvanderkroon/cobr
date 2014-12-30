@@ -26,19 +26,18 @@ function donut(config) {
 
     var arc = d3.svg.arc()
         .outerRadius(radius - 0)
-        .innerRadius(radius - 12);
+        .innerRadius(radius - 25);
 
     var pie = d3.layout.pie()
         .sort(null)
         .value(function(d) {
             return d.value;
         });
-
+    
     var svg = d3.select(config.parent).append("svg")
         .attr("width", containerWidth)
         .attr("height", containerHeight)
-        .append("g")
-        ;
+        .append("g");
 
     var tooltip = d3.select('body').append("div")
         .attr("class", "tooltip")
