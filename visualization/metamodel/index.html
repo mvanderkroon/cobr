@@ -23,9 +23,11 @@ body {
     <script src="js/jquery-2.1.1.min.js"></script>
     <script src="js/underscore-min.js"></script>
     <script src="js/elasticsearch.js"></script>
-    
-    <script src="js/grid.js"></script>
-    <script src="js/forcelayout.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+    <script src="js/Context.js"></script>
+    <script src="js/Grid.js"></script>
+    <script src="js/ForceLayout.js"></script>
 
     <script src="js/config.js"></script>
 
@@ -68,7 +70,7 @@ body {
                     <div class="form-group">
                         <label for="selectLinkFilter" class="col-sm-4 control-label">Filter links by:</label>
                         <div class="col-sm-8">
-                            <select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
+                            <select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender();">
                                 <option>explicit</option>
                                 <option>implicit</option>
                             </select>
@@ -78,6 +80,7 @@ body {
             </div>
         </div>
         <div class="row" id="controls" style="background-color:#cfcfcf;">
+
         </div>
     </div>
 
@@ -86,10 +89,26 @@ body {
     </div>
 
     <div class="row">
-        <div id='grid'></div>
+        <div id="content">
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+                <li class="active"><a href="#tables" data-toggle="tab">Tables</a></li>
+                <li><a href="#links" data-toggle="tab">Links</a></li>
+                
+            </ul>
+            <div id="my-tab-content" class="tab-content">
+                <div class="tab-pane active" id="tables">
+                    <div id='grid'></div>
+                </div>
+                <div class="tab-pane" id="links">
+                    <h1>Links</h1>
+                    <p>link overview will come here</p>
+                </div>
+                
+            </div>
+        </div>
+         
+        
     </div>
-
-
 
     <script>
     $("#controls").click(function() {
@@ -98,45 +117,44 @@ body {
         }, 250);
     });
 
+    var ctx = new Context();
+    var nodes = [];
+    var nodesdict = {};
+    var links = [];
+    var client = new elasticsearch.Client({
+        host: eshost
+    });
+
     $(document).keyup(function(e) {
         if (!e) e = window.event;
 
         var keyCode = e.keyCode || e.which;
 
         if (keyCode == 27) {
+            ctx.resetGui(nodes);
 
-            force1.resetGui();
-            grid1.resetGui();
-            
+            force1.render({'nodes': nodes, 'links': links});
+            grid1.render(nodes);
+
             e.preventDefault();
         }
     });
 
-    window.onload = function() {
-        doRender();
-    }
-
-    var client = new elasticsearch.Client({
-        host: eshost
-    });
-    
-    var nodes = [];
-    var nodesdict = {};
-    var links = [];
-
     var force1 = new ForceLayout({
-        'parent': '#forcelayout'
-    });
+        parent: '#forcelayout',
+        nodeSizeBy: 'num_rows',
+        nodeColorBy: 'db_catalog',
+        linkColorBy: 'type'
+    }, ctx);
 
     var grid1 = new Grid({
-        'parent': '#grid',
-        'columns': ['id', 'db_catalog', 'db_schema', 'tablename', 'num_rows', 'num_columns', 'num_explicit_inlinks', 'num_explicit_outlinks', 'comment']
-    });
+        parent: '#grid',
+        columns: ['db_catalog', 'db_schema', 'tablename', 'num_rows', 'num_columns', 'num_explicit_inlinks', 'num_explicit_outlinks', 'comment']
+    }, ctx);
 
     var doRender = function() {
         var db = $('#nodeFilterBy').val();
         var linkType = $('#linkFilterBy').val();
-
 
         $.ajax({
             url: apihost + 'mtable',
@@ -201,8 +219,6 @@ body {
                             // console.log('')
                         });
 
-
-
                         force1.render({
                             'nodes': nodes,
                             'links': links
@@ -226,6 +242,7 @@ body {
             if (t.length <= 0) {
                 force1.unhighlightNodes();
                 force1.unhighlightLinks();
+                grid1.render(nodes);
                 return;
             }
 
@@ -233,11 +250,11 @@ body {
             var nodeLst = [];
             var linkLst = [];
 
-            for (var i in nodesdict) {
-                var obj = nodesdict[i];
+            for (var i in nodes) {
+                var node = nodes[i];
 
-                if (re.test(obj.node.tablename.toLowerCase())) {
-                    nodeLst.push(obj.node);
+                if (re.test(node.tablename.toLowerCase())) {
+                    nodeLst.push(node);
                 }
             }
 
@@ -292,12 +309,11 @@ body {
                 for (var hi in hits) {
                     var hit = hits[hi];
 
-                    for (var i in nodesdict) {
-                        var obj = nodesdict[i];
-                        var node = obj.node;
+                    for (var i in nodes) {
+                        var node = nodes[i];
 
                         if (hit._source.db_catalog == node.db_catalog && hit._source.db_schema == node.db_schema && hit._source.tablename == node.tablename) {
-                            nodeLst.push(obj.node);
+                            nodeLst.push(node);
                         }
                     }
 
@@ -318,6 +334,11 @@ body {
             });
         }
     }
+    
+    window.onload = function() {
+        doRender();
+    }
+
     </script>
 
 </body>

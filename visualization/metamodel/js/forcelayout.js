@@ -1,9 +1,14 @@
-var ForceLayout = function(config) {
+/*
+ * ForceLayout object
+ */
+var ForceLayout = function(config, ctx) {
     var self = this;
+    var context = ctx;
+    context.register(self);
 
     var default_cfg = {
-        parent: '#histogram',
-        nodeMinRadius: 6,
+        parent: '#forcelayout',
+        nodeMinRadius: 5,
         nodeMaxRadius: 40,
         nodeSizeBy: 'num_rows',
         nodeColorBy: 'db_catalog',
@@ -51,11 +56,9 @@ var ForceLayout = function(config) {
 
     var nmax;
     var nmin;
-    var maxRadius = 40;
-    var minRadius = 6;
 
     var cscale;
-    var sscale = d3.scale.sqrt(); 
+    var sscale = d3.scale.pow(); 
 
     var linkColor = function(d) {
         if (d.type == 'explicit') return 'white';
@@ -140,7 +143,7 @@ var ForceLayout = function(config) {
                 return nodeColor(d);
             })
             .call(force.drag)
-            .on('click', self.handleClickNode)
+            .on('click', context.nodeClicked)
             .on('dblclick', self.handleDblclickNode)
             .on('mouseover', self.handleMouseoverNode)
             .on('mouseout', self.handleMouseleaveNode);
@@ -158,7 +161,7 @@ var ForceLayout = function(config) {
                 return nodeColor(d);
             })
             // .call(force.drag)
-            .on('click', self.handleClickNode)
+            .on('click', context.nodeClicked)
             .on('dblclick', self.handleDblclickNode)
             .on('mouseover', self.handleMouseoverNode)
             .on('mouseout', self.handleMouseleaveNode);
@@ -205,8 +208,9 @@ var ForceLayout = function(config) {
 
     ForceLayout.prototype.resetGui = function() {
         clickednodes = [];
-        force1.unhighlightNodes();
-        force1.unhighlightLinks();
+
+        self.unhighlightNodes();
+        self.unhighlightLinks();
     }
 
     ForceLayout.prototype.handleMouseoverLink = function(d) {
@@ -260,17 +264,11 @@ var ForceLayout = function(config) {
             .style("opacity", 0);
     }
 
-    
-    ForceLayout.prototype.handleClickNode = function(d) {
-        clickednodes.push(d);
-        self.highlightNodes(clickednodes);
-    }
-
     ForceLayout.prototype.handleDblclickNode = function(d) {
-        d3.select(this).classed("fixed", d.fixed = false).style("fill", function(d) {
-            if (d.numrows == 0) return 'white';
-            return nodeColor(d);
-        });
+        // d3.select(this).classed("fixed", d.fixed = false).style("fill", function(d) {
+        //     if (d.numrows == 0) return 'white';
+        //     return nodeColor(d);
+        // });
     }
 
     ForceLayout.prototype.highlightNodes = function(nodes) {
