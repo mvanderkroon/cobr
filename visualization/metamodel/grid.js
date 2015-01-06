@@ -29,31 +29,31 @@ var Grid = function(config) {
     var table = d3.select(config.parent)
         .style("overflow", "auto")
         .style("margin", "10px")
+        .style("font-size", "8pt")
         .append("table")
         .attr("width", "100%");
 
     var thead = table.append("thead")
-        .style("font-size", "10pt")
+        .style("font-size", "8pt")
         .style("background-color", "#414141")
         .style("color", "white")
         .append("tr")
         .selectAll("th")
         .data(config.columns)
-        .text(function(column) {
-            return column;
-        })
         .enter()
         .append("th")
         .text(function(column) {
             return column;
-        });
+        })
+        .style("padding-left", "10px")
+        .style("padding-top", "2px")
+        .style("padding-bottom", "2px");
 
     var tbody = table.append("tbody");
 
     Grid.prototype.render = function(data) {
+    	// data = _.sortBy(data, function(obj){ return obj.tablename; });
         console.log(data);
-
-
 
         // create a row for each object in the data
         var rowselection = tbody.selectAll("tr")
@@ -62,13 +62,15 @@ var Grid = function(config) {
             })
             .attr("id", function(d, i) {
                 return d.id;
-            });
+            })
+            .on('click', self.handleClickNode);
 
         rowselection.enter()
             .append("tr")
             .attr("id", function(d, i) {
                 return d.id;
-            });
+            })
+            .on('click', self.handleClickNode);
 
         rowselection.exit().remove();
 
@@ -99,6 +101,11 @@ var Grid = function(config) {
             });
 
         cells.exit().remove();
+
+        table.selectAll("tbody tr") 
+	        .sort(function(a, b) {
+	                return d3.ascending(a.tablename, b.tablename);
+	        });
     }
 
     Grid.prototype.highlightNodes = function(nodes) {
@@ -116,5 +123,9 @@ var Grid = function(config) {
     Grid.prototype.unhighlightNodes = function() {
         table.selectAll("tr")
             .style("opacity", 1);
+    }
+
+    Grid.prototype.handleClickNode = function(d) {
+
     }
 }

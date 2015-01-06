@@ -98,7 +98,9 @@ var ForceLayout = function(config) {
             .start();
 
         var linkselection = svg.selectAll(".link")
-            .data(links)
+            .data(links, function(d, i) {
+                return d.id;
+            })
             .attr("class", "link")
             .attr("id", function(d) {
                 return d.id;
@@ -124,7 +126,9 @@ var ForceLayout = function(config) {
         linkselection.exit().remove();
 
         var nodeselection = svg.selectAll(".node")
-            .data(nodes)
+            .data(nodes, function(d, i) {
+                return d.id;
+            })
             .attr("class", "node")
             .attr("id", function(d) {
                 return d.index;
