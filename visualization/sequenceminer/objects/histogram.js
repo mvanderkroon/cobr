@@ -16,7 +16,7 @@ function histogram(config, context) {
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 	var xaxis = null;
-	
+	var color = d3.scale.category10();
 
 	self.render = function(data) {
 		var seen = _.countBy(data, function(obj) { return obj[config.variable] });
@@ -61,6 +61,9 @@ function histogram(config, context) {
 			})
 			.attr("x", function(d) {
 				return x(d.var);
+			})
+			.style("fill", function(d) {
+				return color(d.var);
 			})
 		    .attr("width", x.rangeBand())
 		    .attr("height", function(d) { return containerHeight - y(d.count); });

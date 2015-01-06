@@ -1,5 +1,22 @@
-function forcelayout(config) {
+var ForceLayout = function(config) {
     var self = this;
+
+    var default_cfg = {
+        parent: '#histogram',
+        nodeMinRadius: 6,
+        nodeMaxRadius: 40,
+        nodeSizeBy: 'num_rows',
+        nodeColorBy: 'db_catalog',
+        linkColorBy: 'type'
+    };
+
+    if (typeof config == "undefined") {
+        config = default_cfg;
+    } else {
+        for (var index in default_cfg) {
+            if (typeof config[index] == "undefined") config[index] = default_cfg[index];
+        }
+    }
 
     var containerHeight = (($(config.parent).height() == 0) ? $(window).height() : $(config.parent).height());
     var containerWidth = (($(config.parent).width() == 0) ? $(window).width() : $(config.parent).width());
@@ -8,10 +25,10 @@ function forcelayout(config) {
     //     .scaleExtent([1, 10])
     //     .on("zoom", zoomed);
 
-    var svg = d3.select(config.parent).append("svg")
-        .attr("width", containerWidth)
-        .attr("height", containerHeight)
-        .append("g");
+    var svg = d3.select(config.parent).append('svg')
+        .attr('width', containerWidth)
+        .attr('height', containerHeight)
+        .append('g');
         // .call(zoom);
 
     var nodes;
@@ -26,6 +43,8 @@ function forcelayout(config) {
         .gravity([1])
         .linkStrength(.5);
 
+    var clickednodes = [];
+
     var tooltip = d3.select('body').append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
@@ -35,8 +54,7 @@ function forcelayout(config) {
     var maxRadius = 40;
     var minRadius = 6;
 
-    var cscale = d3.scale.category10();
-
+    var cscale;
     var sscale = d3.scale.sqrt(); 
 
     var linkColor = function(d) {
@@ -54,7 +72,9 @@ function forcelayout(config) {
         return sscale(d[config.nodeSizeBy]);
     }
 
-    self.render = function(data) {
+    ForceLayout.prototype.render = function(data) {
+        console.log(data);
+        cscale = d3.scale.category10();
 
         if (data) {
             nodes = data.nodes;
@@ -77,9 +97,8 @@ function forcelayout(config) {
             .on("tick", tick)
             .start();
 
-        var link = svg.selectAll(".link")
+        var linkselection = svg.selectAll(".link")
             .data(links)
-            .enter().append("line")
             .attr("class", "link")
             .attr("id", function(d) {
                 return d.id;
@@ -90,9 +109,22 @@ function forcelayout(config) {
             .on('mouseover', self.handleMouseoverLink)
             .on('mouseout', self.handleMouseleaveLink);
 
-        var node = svg.selectAll(".node")
+        var link = linkselection.enter()
+            .append("line")
+            .attr("class", "link")
+            .attr("id", function(d) {
+                return d.id;
+            })
+            .style("stroke", function(d) {
+                return linkColor(d);
+            })
+            .on('mouseover', self.handleMouseoverLink)
+            .on('mouseout', self.handleMouseleaveLink);
+
+        linkselection.exit().remove();
+
+        var nodeselection = svg.selectAll(".node")
             .data(nodes)
-            .enter().append("circle")
             .attr("class", "node")
             .attr("id", function(d) {
                 return d.index;
@@ -104,15 +136,36 @@ function forcelayout(config) {
                 return nodeColor(d);
             })
             .call(force.drag)
-            .on("dblclick", self.handleDblclickNode)
+            .on('click', self.handleClickNode)
+            .on('dblclick', self.handleDblclickNode)
             .on('mouseover', self.handleMouseoverNode)
             .on('mouseout', self.handleMouseleaveNode);
+
+        var node = nodeselection.enter()
+            .append("circle")
+            .attr("class", "node")
+            .attr("id", function(d) {
+                return d.index;
+            })
+            .attr("r", function(d) {
+                return nodeSize(d);
+            })
+            .style("fill", function(d) {
+                return nodeColor(d);
+            })
+            .call(force.drag)
+            .on('click', self.handleClickNode)
+            .on('dblclick', self.handleDblclickNode)
+            .on('mouseover', self.handleMouseoverNode)
+            .on('mouseout', self.handleMouseleaveNode);
+
+        nodeselection.exit().remove();
 
         var drag = force.drag()
             .on("dragstart", dragstart);
 
         function dragstart(d) {
-            d3.select(this).classed("fixed", d.fixed = true).style("fill", "orange");
+            d3.select(this).classed("fixed", d.fixed = true);
         }
 
         function tick(e) {
@@ -137,13 +190,16 @@ function forcelayout(config) {
                 });
 
         };
+
+
+
     }
 
     /**
 	USER INTERACTION
 	**/
 
-    self.handleMouseoverLink = function(d) {
+    ForceLayout.prototype.handleMouseoverLink = function(d) {
         var sourcenode = d.source;
         var targetnode = d.target;
 
@@ -163,13 +219,13 @@ function forcelayout(config) {
             .style("top", (d3.event.pageY) + "px");
     }
 
-    self.handleMouseleaveLink = function(d) {
+    ForceLayout.prototype.handleMouseleaveLink = function(d) {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0);   
     }
 
-    self.handleMouseoverNode = function(d) {
+    ForceLayout.prototype.handleMouseoverNode = function(d) {
         ttstr = d.db_catalog + '.' + d.db_schema + '.' + d.tablename + '<br/>'
         ttstr += '<b>row count: </b>' + d.num_rows + '<br/>'
         ttstr += '<b>col count: </b>' + d.num_columns + '<br/>'
@@ -188,29 +244,30 @@ function forcelayout(config) {
             .style("top", (d3.event.pageY) + "px");
     }
 
-    self.handleMouseleaveNode = function(d) {
+    ForceLayout.prototype.handleMouseleaveNode = function(d) {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0);
     }
 
-    self.handleClickNode = function(d) {
-        
+    
+    ForceLayout.prototype.handleClickNode = function(d) {
+        clickednodes.push(d);
+        self.highlightNodes(clickednodes);
     }
 
-    self.handleDblclickNode = function(d) {
+    ForceLayout.prototype.handleDblclickNode = function(d) {
         d3.select(this).classed("fixed", d.fixed = false).style("fill", function(d) {
             if (d.numrows == 0) return 'white';
             return nodeColor(d);
         });
     }
 
-    self.highlightNodes = function(nodes) {
-
+    ForceLayout.prototype.highlightNodes = function(nodes) {
         var ids = _.pluck(nodes, 'id');
         
         svg.selectAll(".node")
-            .style("opacity", 0.1)
+            .style("opacity", 0.2)
             .filter(function(node) {
                 return ids.indexOf(node.id) != -1;
             })
@@ -218,7 +275,7 @@ function forcelayout(config) {
             .style("fill", "red");
     }
 
-    self.unhighlightNodes = function() {
+    ForceLayout.prototype.unhighlightNodes = function() {
         svg.selectAll(".node")
             .style("fill", function(d) {
                 return nodeColor(d);
@@ -226,7 +283,7 @@ function forcelayout(config) {
             .style("opacity", 0.8);
     }
 
-    self.highlightLinks = function(links) {
+    ForceLayout.prototype.highlightLinks = function(links) {
         var ids = _.pluck(links, 'id');
         
         svg.selectAll(".link")
@@ -239,7 +296,7 @@ function forcelayout(config) {
 
     }
 
-    self.unhighlightLinks = function() {
+    ForceLayout.prototype.unhighlightLinks = function() {
         svg.selectAll(".link")
             .style("fill", function(d) {
                 return linkColor(d);
@@ -255,33 +312,5 @@ function forcelayout(config) {
 	UTILITY METHODS
 	 **/
 
-    var default_cfg = {
-        parent: '#histogram',
-        nodeMinRadius: 6,
-        nodeMaxRadius: 40,
-        nodeSizeBy: 'num_rows',
-        nodeColorBy: 'db_catalog',
-        linkColorBy: 'type'
-    };
 
-    if (typeof config == "undefined") {
-        config = default_cfg;
-    } else {
-        for (var index in default_cfg) {
-            if (typeof config[index] == "undefined") config[index] = default_cfg[index];
-        }
-    }
-
-    self.render.attr = function(key, value) {
-        if (typeof value == "undefined") return config[key];
-        config[key] = value;
-        return self.render();
-    }
-
-    /** INIT **/
-    // self.render(context.getTree(function(node) {
-    // 	return node.depth < 22;
-    // }));
-
-    return self;
 }

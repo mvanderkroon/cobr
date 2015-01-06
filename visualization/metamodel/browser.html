@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="forcelayout.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+</head>
+<style>
+body {
+    /*font: 10px Helvetica Neue, sans-serif;*/
+    
+    background: #7f7f7f;
+    /*color:white;*/
+}
+.row {
+    padding: 20px;
+    background-color: white;
+}
+.histogram .bar rect {
+    fill: steelblue;
+    shape-rendering: crispEdges;
+}
+.histogram .bar text {
+    fill: #fff;
+}
+.histogram .axis path,
+.axis line {
+    fill: none;
+    stroke: none;
+    shape-rendering: crispEdges;
+}
+</style>
+
+<body>
+    <script src="d3.min.js"></script>
+    <script src="jquery-2.1.1.min.js"></script>
+    <script src="underscore-min.js"></script>
+    <script src="forcelayout.js"></script>
+    <script src="elasticsearch.js"></script>
+    <script src="donut.js"></script>
+    <script src="histogram.js"></script>
+
+    <script src="config.js"></script>
+
+    <!--     <div class="container-fluid">
+	    <div class="row">
+	        <div class="col-xs-12">
+	            <h1>Aanvragen</h1>
+	        </div>
+	    </div>
+	    <div class="row">
+			<div class="col-xs-3">
+				id
+        	</div>
+        	<div class="col-xs-3">
+        		integer
+        	</div>
+        	<div class="col-xs-3">
+        		<div id="donut0" style="width:60px;height:60px;"></div>
+        	</div>
+        	<div class="col-xs-3">
+        		<div id="histogram0" class="histogram" style="width:280px;height:60px;"></div>
+        	</div>
+		</div>
+    </div> -->
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-9">
+                <h1>Aanvragen</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <h2>Numerical</h2>
+            </div>
+            <div class="col-md-10">
+                <div class="row">
+                    <div class="col-md-1">
+                        id
+                    </div>
+                    <div class="col-md-1">
+                        integer
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div id="donut0" style="width:60px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <div id="histogram0" class="histogram" style="width:280px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-8">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1">
+                        leeftijd
+                    </div>
+                    <div class="col-md-1">
+                        integer
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div id="donut1" style="width:60px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <div id="histogram1" class="histogram" style="width:280px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-8">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1">
+                        verzamelinkomen
+                    </div>
+                    <div class="col-md-1">
+                        decimal
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div id="donut2" style="width:60px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <div id="histogram2" class="histogram" style="width:280px;height:60px;"></div>
+                            </div>
+                            <div class="col-md-8">
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    window.onload = function() {
+        $("#dbHost").val(apihost);
+        $("#esHost").val(eshost);
+
+        var d = donut({
+            'parent': '#donut0'
+        });
+        d.render([{
+            category: 'null',
+            value: 10
+        }, {
+            category: 'positive',
+            value: 20
+        }, {
+            category: 'negative',
+            value: 40
+        }, {
+            category: 'zero',
+            value: 35
+        }]);
+
+        var d = donut({
+            'parent': '#donut1'
+        });
+        d.render([{
+            category: 'null',
+            value: 59
+        }, {
+            category: 'positive',
+            value: 12
+        }, {
+            category: 'negative',
+            value: 56
+        }, {
+            category: 'zero',
+            value: 100
+        }]);
+
+        var d = donut({
+            'parent': '#donut2'
+        });
+        d.render([{
+            category: 'null',
+            value: 40
+        }, {
+            category: 'positive',
+            value: 20
+        }, {
+            category: 'negative',
+            value: 10
+        }, {
+            category: 'zero',
+            value: 35
+        }]);
+
+        var h = histogram({
+            'parent': '#histogram0',
+            'variable': 'category'
+        });
+        h.render([{
+            category: 'null',
+            value: 10
+        }, {
+            category: 'positive',
+            value: 20
+        }, {
+            category: 'negative',
+            value: 40
+        }, {
+            category: 'zero',
+            value: 35
+        }]);
+
+        var h = histogram({
+            'parent': '#histogram1',
+            'variable': 'category'
+        });
+        h.render([{
+            category: 'null',
+            value: 59
+        }, {
+            category: 'positive',
+            value: 12
+        }, {
+            category: 'negative',
+            value: 56
+        }, {
+            category: 'zero',
+            value: 100
+        }]);
+
+        var h = histogram({
+            'parent': '#histogram2',
+            'variable': 'category'
+        });
+        h.render([{
+            category: 'null',
+            value: 40
+        }, {
+            category: 'positive',
+            value: 20
+        }, {
+            category: 'negative',
+            value: 10
+        }, {
+            category: 'zero',
+            value: 35
+        }]);
+    }
+    </script>
+</body>
+
+</html>

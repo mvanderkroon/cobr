@@ -3,33 +3,18 @@
 
 <head>
     <link rel="stylesheet" type="text/css" href="forcelayout.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
 </head>
 <style>
 body {
     /*font: 10px Helvetica Neue, sans-serif;*/
+    
     background: #7f7f7f;
     /*color:white;*/
 }
-
 .row {
-	padding:20px;
-	background-color:white;
-}
-
-.histogram .bar rect {
-  fill: steelblue;
-  shape-rendering: crispEdges;
-}
-
-.histogram .bar text {
-  fill: #fff;
-}
-
-.histogram .axis path, .axis line {
-  fill: none;
-  stroke: none;
-  shape-rendering: crispEdges;
+    padding: 20px;
+    background-color: white;
 }
 </style>
 
@@ -37,170 +22,74 @@ body {
     <script src="d3.min.js"></script>
     <script src="jquery-2.1.1.min.js"></script>
     <script src="underscore-min.js"></script>
-    <script src="forcelayout.js"></script>
     <script src="elasticsearch.js"></script>
-    <script src="donut.js"></script>
-    <script src="histogram.js"></script>
+    
+    <script src="grid.js"></script>
+    <script src="forcelayout.js"></script>
 
     <script src="config.js"></script>
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="form-horizontal" role="form">
-                <div class="form-group">
-                    <label for="selectNodeFilter" class="col-sm-4 control-label">Filter nodes by:</label>
-                    <div class="col-sm-8">
-                        <select class="form-control" id="nodeFilterBy" name="nodeFilterBy" onchange="doRender();">
-                            <option>SF2015</option>
-                            <option>sfdb</option>
-                            <option>Sundb</option>
-                            <option>X10DBASE</option>
-                            <option>sakila</option>
-                        </select>
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="form-horizontal" role="form">
+
+                    <div class="form-group">
+                        <label for="inputQuery" class="col-sm-4 control-label">Content query:</label>
+                        <div class="col-sm-8">
+                            <input type="search" class="form-control" id="ecQuery" placeholder="Query" onkeyup="handleEsQ();">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="selectLinkFilter" class="col-sm-4 control-label">Filter links by:</label>
-                    <div class="col-sm-8">
-                        <select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
-                            <option>explicit</option>
-                            <option>implicit</option>
-                        </select>
+                    <div class="form-group">
+                        <label for="metamodelQuery" class="col-sm-4 control-label">Metamodel query:</label>
+                        <div class="col-sm-8">
+                            <input type="search" class="form-control" id="mmQuery" placeholder="Query" onkeyup="handleNQ()">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="inputQuery" class="col-sm-4 control-label">Query:</label>
-                    <div class="col-sm-8">
-                        <input type="search" class="form-control" id="ecQuery" placeholder="Query" onkeyup="handleEsQ();">
-                    </div>
+
                 </div>
             </div>
-            <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-8">
-                    <a id="controls">Hide</a>
-                    <!-- <button type="submit" class="btn btn-default" id="controls">Hide</button> -->
+
+            <div class="col-md-6">
+                <div class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label for="selectNodeFilter" class="col-sm-4 control-label">Filter nodes by:</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="nodeFilterBy" name="nodeFilterBy" onchange="doRender();">
+                                <option>SF2015</option>
+                                <option>sfdb</option>
+                                <option>Sundb</option>
+                                <option>X10DBASE</option>
+                                <option>sakila</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectLinkFilter" class="col-sm-4 control-label">Filter links by:</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
+                                <option>explicit</option>
+                                <option>implicit</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-        	<div class="form-horizontal" role="form">
-                <div class="form-group">
-                    <label for="inputDatabaseHost" class="col-sm-4 control-label">Database host:</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" id="dbHost" placeholder="127.0.0.1:5000" onkeyup="">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="inputElasticSearchHost" class="col-sm-4 control-label">Elastic Search host:</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" id="esHost" placeholder="127.0.0.1:9200" onkeyup="">
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-
-        <div class="col-md-4">
-
+        <div class="row" id="controls" style="background-color:#cfcfcf;">
         </div>
     </div>
 
-
-    <!--
-	<div id="filters">
-		node: <select id="nodeFilterBy" name="nodeFilterBy" onchange="doRender()">
-			<option>SF2015</option>
-			<option>sfdb</option>
-			<option>Sundb</option>
-			<option>X10DBASE</option>
-			<option>def</option>
-		</select>
-		link: <select id="linkFilterBy" name="linkFilterBy" onchange="doRender()">
-			<option>explicit</option>
-			<option>implicit</option>
-		</select>
-	</div>
-
-	tablename: <input type="search" id="nodeQuery" style="width:300px;" onkeyup="handleNQ();"></input><br/>
-	elasticsearch: <input type="search" id="ecQuery" style="width:300px;" onkeyup="handleEcQ();"></input><br/>
- -->
-    <div id='forcelayout'></div>
+    <div class="row" style="background-color:grey;">
+        <div id='forcelayout'></div>
+    </div>
 
     <div class="row">
-    	<div class="col-md-3">
-    		
-    	</div>
-    	<div class="col-md-9">
-    		<h1>Aanvragen</h1>
-    	</div>
+        <div id='grid'></div>
     </div>
-    <div class="row">
-        <div class="col-md-1">
-            <h2>Numerical</h2>
-        </div>
-        <div class="col-md-11">
-        	<div class="row">
-        		<div class="col-md-2">
-		            <p><b>id</b></p>
-		            <p>integer</p>
-		        </div>
-		        <div class="col-md-10">
-		        	<div class="row">
-			        	<div class="col-md-2">
-				        	<div id="donut0" style="width:120px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-2">
-				        	<div id="histogram0" class="histogram" style="width:280px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-8">
-				        </div>
-		        	</div>
-		        	
-	            	
-		        </div>
-            </div>
-            <div class="row">
-        		<div class="col-md-2">
-		            <p><b>leeftijd</b></p>
-		            <p>integer</p>
-		        </div>
-		        <div class="col-md-10">
-		        	<div class="row">
-			        	<div class="col-md-2">
-				        	<div id="donut1" style="width:120px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-2">
-				        	<div id="histogram1" class="histogram" style="width:280px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-8">
-				        </div>
-		        	</div>
-		        	
-	            	
-		        </div>
-            </div>
-            <div class="row">
-        		<div class="col-md-2">
-		            <p><b>verzamelinkomen</b></p>
-		            <p>integer</p>
-		        </div>
-		        <div class="col-md-10">
-		        	<div class="row">
-			        	<div class="col-md-2">
-				        	<div id="donut2" style="width:120px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-2">
-				        	<div id="histogram2" class="histogram" style="width:280px;height:120px;"></div>
-				        </div>
-				        <div class="col-md-8">
-				        </div>
-		        	</div>
-		        	
-	            	
-		        </div>
-            </div>
-        </div>
-    </div>
+
+
 
     <script>
     $("#controls").click(function() {
@@ -211,75 +100,29 @@ body {
 
     window.onload = function() {
         doRender();
-        $("#dbHost").val(apihost);
-        $("#esHost").val(eshost);
-
-        var d = donut({'parent':'#donut0'});
-        d.render([ { category:'null', value:10 },
-                { category:'positive', value:20 },
-                { category:'negative', value:40 },
-                { category:'zero', value:35 }
-        ]);
-
-        var d = donut({'parent':'#donut1'});
-        d.render([ { category:'null', value:59 },
-                { category:'positive', value:12 },
-                { category:'negative', value:56 },
-                { category:'zero', value:100 }
-        ]);
-
-        var d = donut({'parent':'#donut2'});
-        d.render([ { category:'null', value:40 },
-                { category:'positive', value:20 },
-                { category:'negative', value:10 },
-                { category:'zero', value:35 }
-        ]);
-
-        var h = histogram({
-        		'parent':'#histogram0',
-				'variable': 'category'
-			});
-        h.render([ { category:'null', value:10 },
-                { category:'positive', value:20 },
-                { category:'negative', value:40 },
-                { category:'zero', value:35 }
-        ]);
-
-        var h = histogram({
-        		'parent':'#histogram1',
-				'variable': 'category'
-			});
-        h.render([ { category:'null', value:59 },
-                { category:'positive', value:12 },
-                { category:'negative', value:56 },
-                { category:'zero', value:100 }
-        ]);
-
-        var h = histogram({
-        		'parent':'#histogram2',
-				'variable': 'category'
-			});
-        h.render([ { category:'null', value:40 },
-                { category:'positive', value:20 },
-                { category:'negative', value:10 },
-                { category:'zero', value:35 }
-        ]);
     }
 
     var client = new elasticsearch.Client({
         host: eshost
     });
-
-    var force;
+    
     var nodes = [];
     var nodesdict = {};
     var links = [];
 
-    var doRender = function() {
-        d3.select('#forcelayout').select('svg').remove('*');
+    var force1 = new ForceLayout({
+        'parent': '#forcelayout'
+    });
 
+    var grid1 = new Grid({
+        'parent': '#grid',
+        'columns': ['db_catalog', 'db_schema', 'tablename', 'num_rows', 'num_columns', 'num_explicit_inlinks', 'num_explicit_outlinks']
+    });
+
+    var doRender = function() {
         var db = $('#nodeFilterBy').val();
         var linkType = $('#linkFilterBy').val();
+
 
         $.ajax({
             url: apihost + 'mtable',
@@ -344,14 +187,14 @@ body {
                             // console.log('')
                         });
 
-                        force = forcelayout({
-                            'parent': '#forcelayout'
-                        });
 
-                        force.render({
+
+                        force1.render({
                             'nodes': nodes,
                             'links': links
                         });
+
+                        grid1.render(nodes);
                     }
                 });
             }
@@ -364,11 +207,11 @@ body {
         var keyCode = e.keyCode || e.which;
 
         if (keyCode == 13) {
-            var t = $('#nodeQuery')[0].value.toLowerCase();
+            var t = $('#mmQuery')[0].value.toLowerCase();
 
             if (t.length <= 0) {
-                force.unhighlightNodes();
-                force.unhighlightLinks();
+                force1.unhighlightNodes();
+                force1.unhighlightLinks();
                 return;
             }
 
@@ -392,11 +235,16 @@ body {
                 }
             }
 
-            force.highlightNodes(nodeLst);
-            force.highlightLinks(linkLst);
+            force1.highlightNodes(nodeLst);
+            force1.highlightLinks(linkLst);
+            grid1.render(nodeLst);
+            
+
         } else if (keyCode == 27) {
-            force.unhighlightNodes();
-            force.unhighlightLinks();
+            force1.unhighlightNodes();
+            force1.unhighlightLinks();
+            grid1.render(nodes);
+            
         }
     }
 
@@ -410,8 +258,9 @@ body {
             var db = $('#nodeFilterBy').val();
 
             if (query.length <= 0) {
-                force.unhighlightNodes();
-                force.unhighlightLinks();
+                force1.unhighlightNodes();
+                force1.unhighlightLinks();
+                grid1.render(nodes);
                 return;
             }
 
@@ -454,15 +303,19 @@ body {
                     }
                 }
 
-                force.highlightNodes(nodeLst);
-                force.highlightLinks(linkLst);
+                force1.highlightNodes(nodeLst);
+                force1.highlightLinks(linkLst);
+                grid1.render(nodeLst);
+                
 
             }, function(error) {
                 // console.trace(error.message);
             });
         } else if (keyCode == 27) { // 'esc' pressed
-            force.unhighlightNodes();
-            force.unhighlightLinks();
+            force1.unhighlightNodes();
+            force1.unhighlightLinks();
+            grid1.render(nodes);
+            
         }
     }
     </script>

@@ -26,7 +26,7 @@ function donut(config) {
 
     var arc = d3.svg.arc()
         .outerRadius(radius - 0)
-        .innerRadius(radius - 25);
+        .innerRadius(radius - 12);
 
     var pie = d3.layout.pie()
         .sort(null)
