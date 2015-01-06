@@ -157,7 +157,7 @@ var ForceLayout = function(config) {
             .style("fill", function(d) {
                 return nodeColor(d);
             })
-            .call(force.drag)
+            // .call(force.drag)
             .on('click', self.handleClickNode)
             .on('dblclick', self.handleDblclickNode)
             .on('mouseover', self.handleMouseoverNode)
@@ -202,6 +202,12 @@ var ForceLayout = function(config) {
     /**
 	USER INTERACTION
 	**/
+
+    ForceLayout.prototype.resetGui = function() {
+        clickednodes = [];
+        force1.unhighlightNodes();
+        force1.unhighlightLinks();
+    }
 
     ForceLayout.prototype.handleMouseoverLink = function(d) {
         var sourcenode = d.source;

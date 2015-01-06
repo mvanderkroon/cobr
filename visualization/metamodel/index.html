@@ -2,8 +2,8 @@
 <meta charset="utf-8">
 
 <head>
-    <link rel="stylesheet" type="text/css" href="forcelayout.css">
-    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/forcelayout.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
 </head>
 <style>
 body {
@@ -19,15 +19,15 @@ body {
 </style>
 
 <body>
-    <script src="d3.min.js"></script>
-    <script src="jquery-2.1.1.min.js"></script>
-    <script src="underscore-min.js"></script>
-    <script src="elasticsearch.js"></script>
+    <script src="js/d3.min.js"></script>
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/underscore-min.js"></script>
+    <script src="js/elasticsearch.js"></script>
     
-    <script src="grid.js"></script>
-    <script src="forcelayout.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/forcelayout.js"></script>
 
-    <script src="config.js"></script>
+    <script src="js/config.js"></script>
 
     <div class="container-fluid">
         <div class="row">
@@ -96,6 +96,20 @@ body {
         $('html, body').animate({
             scrollTop: $("#forcelayout").offset().top
         }, 250);
+    });
+
+    $(document).keyup(function(e) {
+        if (!e) e = window.event;
+
+        var keyCode = e.keyCode || e.which;
+
+        if (keyCode == 27) {
+
+            force1.resetGui();
+            grid1.resetGui();
+            
+            e.preventDefault();
+        }
     });
 
     window.onload = function() {
@@ -238,13 +252,6 @@ body {
             force1.highlightNodes(nodeLst);
             force1.highlightLinks(linkLst);
             grid1.render(nodeLst);
-            
-
-        } else if (keyCode == 27) {
-            force1.unhighlightNodes();
-            force1.unhighlightLinks();
-            grid1.render(nodes);
-            
         }
     }
 
@@ -306,16 +313,9 @@ body {
                 force1.highlightNodes(nodeLst);
                 force1.highlightLinks(linkLst);
                 grid1.render(nodeLst);
-                
-
             }, function(error) {
                 // console.trace(error.message);
             });
-        } else if (keyCode == 27) { // 'esc' pressed
-            force1.unhighlightNodes();
-            force1.unhighlightLinks();
-            grid1.render(nodes);
-            
         }
     }
     </script>

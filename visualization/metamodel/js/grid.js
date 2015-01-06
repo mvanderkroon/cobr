@@ -108,6 +108,10 @@ var Grid = function(config) {
 	        });
     }
 
+    Grid.prototype.resetGui = function() {
+    	grid1.render(nodes);
+    }
+
     Grid.prototype.highlightNodes = function(nodes) {
         var ids = _.pluck(nodes, 'id');
 
