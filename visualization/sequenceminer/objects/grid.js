@@ -12,14 +12,10 @@ function grid(config, context) {
 	// The table generation function
 	function tabulate(data, columns) {
 	    var table = d3.select(config.parent)
-	    		.style("overflow", "auto")
-	    		.style("margin", "20px")
 	    		.append("table")
+	    		.attr("class", "table table-hover")
 	            .attr("width", "100%"),
 	        thead = table.append("thead")
-	        	.style("font-size", "12pt")
-	        	.style("background-color", "#414141")
-	        	.style("color", "white"),
 	        tbody = table.append("tbody");
 
 	    // append the header row
@@ -34,11 +30,7 @@ function grid(config, context) {
 	    var rows = tbody.selectAll("tr")
 	        .data(data)
 	        .enter()
-	        .append("tr")
-	        .attr("class", function(d, i) {
-	        	if (i%2==0) return "even";
-	        	return "odd";
-	        });
+	        .append("tr");
 
 	    // create a cell in each row for each column
 	    var cells = rows.selectAll("td")
@@ -49,9 +41,6 @@ function grid(config, context) {
 	        })
 	        .enter()
 	        .append("td")
-	        .style("padding-left", "10px")
-	        .style("padding-top", "2px")
-	        .style("padding-bottom", "2px")
 	        .html(function(d) { return d.value; });
 	    
 	    return table;

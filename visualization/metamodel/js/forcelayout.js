@@ -158,7 +158,7 @@ var ForceLayout = function(config, ctx) {
             .style("fill", function(d) {
                 return nodeColor(d);
             })
-            // .call(force.drag)
+            .call(force.drag)
             .on('click', context.nodeClicked)
             .on('dblclick', self.handleDblclickNode)
             .on('mouseover', self.handleMouseoverNode)
@@ -166,11 +166,15 @@ var ForceLayout = function(config, ctx) {
 
         nodeselection.exit().remove();
 
-        var drag = force.drag()
-            .on("dragstart", dragstart);
+        // var drag = force.drag()
+        //     .on("dragstart", dragstart);
 
         function dragstart(d) {
-            d3.select(this).classed("fixed", d.fixed = true);
+            // d3.select(this).classed("fixed", d.fixed = true);
+        }
+
+        function dragend(d) {
+            
         }
 
         function tick(e) {
@@ -200,6 +204,13 @@ var ForceLayout = function(config, ctx) {
     /**
 	USER INTERACTION
 	**/
+
+    ForceLayout.prototype.init = function() {
+        var nodes = context.nodes();
+        var links = context.links();
+
+        self.render({links: links, nodes:nodes});
+    }
 
     ForceLayout.prototype.handleKeyUp = function(keyCode) {
         if (keyCode == 27) { // escape
@@ -284,10 +295,7 @@ var ForceLayout = function(config, ctx) {
     }
 
     ForceLayout.prototype.handleDblclickNode = function(d) {
-        // d3.select(this).classed("fixed", d.fixed = false).style("fill", function(d) {
-        //     if (d.numrows == 0) return 'white';
-        //     return nodeColor(d);
-        // });
+
     }
 
     ForceLayout.prototype.highlightNodes = function(nodes) {

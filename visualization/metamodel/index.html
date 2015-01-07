@@ -7,14 +7,14 @@
 </head>
 <style>
 body {
-    /*font: 10px Helvetica Neue, sans-serif;*/
-    
-    background: #7f7f7f;
-    /*color:white;*/
+    position: relative;
 }
 .row {
     padding: 20px;
     background-color: white;
+}
+table {
+    font-size: 10pt;
 }
 </style>
 
@@ -80,7 +80,7 @@ body {
             </div>
         </div>
         <div class="row" id="controls" style="background-color:#cfcfcf;">
-
+            
         </div>
     </div>
 
@@ -92,16 +92,15 @@ body {
         <div id="content">
             <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
                 <li class="active"><a href="#tables" data-toggle="tab">Tables</a></li>
-                <li><a href="#links" data-toggle="tab">Links</a></li>
+                <li><a href="#links" data-toggle="tab">Foreign Keys</a></li>
                 
             </ul>
             <div id="my-tab-content" class="tab-content">
                 <div class="tab-pane active" id="tables">
-                    <div id='grid'></div>
+                    <div id='nodegrid'></div>
                 </div>
                 <div class="tab-pane" id="links">
-                    <h1>Links</h1>
-                    <p>link overview will come here</p>
+                    <div id='linkgrid'></div>
                 </div>
                 
             </div>
@@ -138,9 +137,14 @@ body {
     }, ctx);
 
     var grid1 = new Grid({
-        parent: '#grid',
+        parent: '#nodegrid',
         columns: ['db_catalog', 'db_schema', 'tablename', 'num_rows', 'num_columns', 'num_explicit_inlinks', 'num_explicit_outlinks', 'comment']
     }, ctx);
+
+    // var grid2 = new Grid({
+    //     parent: '#linkgrid',
+    //     columns: ['db_catalog', 'pkdb_schema', 'pktablename', 'fk_columns', 'fkdb_schema', 'fktablename', 'pk_columns', 'keyname', 'score', 'type']
+    // }, ctx);
 
     var doRender = function() {
         var db = $('#nodeFilterBy').val();
@@ -211,13 +215,7 @@ body {
 
                         ctx.nodes(nodes);
                         ctx.links(links);
-
-                        force1.render({
-                            'nodes': nodes,
-                            'links': links
-                        });
-
-                        grid1.render(nodes);
+                        ctx.init();
                     }
                 });
             }

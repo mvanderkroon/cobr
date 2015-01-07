@@ -47,8 +47,6 @@ var Grid = function(config, ctx) {
 
     var tbody = table.append("tbody");
 
-    var clickednodes = [];
-
     Grid.prototype.render = function(data) {
     	// data = _.sortBy(data, function(obj){ return obj.tablename; });
         console.log(data);
@@ -98,6 +96,10 @@ var Grid = function(config, ctx) {
 	        .sort(function(a, b) {
                 return d3.ascending(a.tablename, b.tablename);
 	        });
+    }
+
+    Grid.prototype.init = function() {
+        self.render(context.nodes());
     }
 
     Grid.prototype.handleKeyUp = function(keyCode) {

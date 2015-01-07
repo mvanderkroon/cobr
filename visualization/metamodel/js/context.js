@@ -41,6 +41,13 @@ var Context = function(config) {
 
 
 
+
+    Context.prototype.init = function() {
+    	for (var i in listeners) {
+			listeners[i].init();
+		}
+    }
+
     var seenNodes = {};
     Context.prototype.keyUp = function(e) {
     	var keyCode = e.keyCode || e.which;
@@ -81,7 +88,7 @@ var Context = function(config) {
         			}
         		});
         	});
-        	
+
         }
 
         // emit event
@@ -123,5 +130,17 @@ var Context = function(config) {
 
     Context.prototype.linkHovered = function(d) {
     
+    }
+
+    Context.prototype.nodeFilter = function(nodelst) {
+    	for (var i in listeners) {
+			listeners[i].handleNodeFilter(d);
+		}
+    }
+
+    Context.prototype.linkFilter = function(linklst) {
+    	for (var i in listeners) {
+			listeners[i].handleLinkFilter(d);
+		}
     }
 }
