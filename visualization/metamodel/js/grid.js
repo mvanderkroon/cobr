@@ -100,6 +100,29 @@ var Grid = function(config, ctx) {
 	        });
     }
 
+    Grid.prototype.handleKeyUp = function(keyCode) {
+        if (keyCode == 27) { // escape
+            self.unhighlightNodes();
+            self.unhighlightLinks();
+
+            self.render(context.nodes());
+            
+        } else if (keyCode == 69) { // 'e' for expand selection
+            var selectednodes = context.selectedNodes();
+            
+            self.render(selectednodes);
+        }
+    }
+
+    Grid.prototype.handleClickNode = function(d) {
+        var selectednodes = context.selectedNodes();
+        self.render(selectednodes);
+    }
+
+    Grid.prototype.handleClickLink = function(d) {
+        
+    }
+
     Grid.prototype.highlightNodes = function(nodes) {
         var ids = _.pluck(nodes, 'id');
 

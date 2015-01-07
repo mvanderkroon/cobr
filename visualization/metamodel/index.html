@@ -127,17 +127,7 @@ body {
 
     $(document).keyup(function(e) {
         if (!e) e = window.event;
-
-        var keyCode = e.keyCode || e.which;
-
-        if (keyCode == 27) {
-            ctx.resetGui(nodes);
-
-            force1.render({'nodes': nodes, 'links': links});
-            grid1.render(nodes);
-
-            e.preventDefault();
-        }
+        ctx.keyUp(e);        
     });
 
     var force1 = new ForceLayout({
@@ -218,6 +208,9 @@ body {
                             // console.log(tarNode.weight)
                             // console.log('')
                         });
+
+                        ctx.nodes(nodes);
+                        ctx.links(links);
 
                         force1.render({
                             'nodes': nodes,

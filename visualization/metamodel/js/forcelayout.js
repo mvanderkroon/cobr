@@ -48,8 +48,6 @@ var ForceLayout = function(config, ctx) {
         .gravity([1])
         .linkStrength(.5);
 
-    var clickednodes = [];
-
     var tooltip = d3.select('body').append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
@@ -197,20 +195,29 @@ var ForceLayout = function(config, ctx) {
                 });
 
         };
-
-
-
     }
 
     /**
 	USER INTERACTION
 	**/
 
-    ForceLayout.prototype.resetGui = function() {
-        clickednodes = [];
+    ForceLayout.prototype.handleKeyUp = function(keyCode) {
+        if (keyCode == 27) { // escape
+            self.unhighlightNodes();
+            self.unhighlightLinks();
 
-        self.unhighlightNodes();
-        self.unhighlightLinks();
+            var nodes = context.nodes();
+            var links = context.links();
+
+            self.render({links: links, nodes:nodes});
+            
+        } else if (keyCode == 69) { // 'e' for expand selection
+            var selectednodes = context.selectedNodes();
+            var selectedlinks = context.selectedLinks();
+            
+            self.highlightNodes(selectednodes);
+            self.highlightLinks(selectedlinks);
+        }
     }
 
     ForceLayout.prototype.handleMouseoverLink = function(d) {
@@ -262,6 +269,18 @@ var ForceLayout = function(config, ctx) {
         tooltip.transition()
             .duration(200)
             .style("opacity", 0);
+    }
+
+    ForceLayout.prototype.handleClickNode = function(d) {
+        var selectednodes = context.selectedNodes();
+        var selectedlinks = context.selectedLinks();
+        
+        self.highlightNodes(selectednodes);
+        self.highlightLinks(selectedlinks);
+    }
+
+    ForceLayout.prototype.handleClickLink = function(d) {
+        
     }
 
     ForceLayout.prototype.handleDblclickNode = function(d) {
