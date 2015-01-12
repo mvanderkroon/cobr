@@ -1,0 +1,229 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+</head>
+
+<body>
+    <script src="../js/d3.min.js"></script>
+    <script src="../js/queue.v1.min.js"></script>
+    <script src="../js/underscore-min.js"></script>
+    <script src="../js/jquery-2.1.1.min.js"></script>
+
+    <script src="watcher.js"></script>
+    <script src="context.js"></script>
+    <script src="grid.js"></script>
+    <script src="forcelayout.js"></script>
+
+    <div id='container'>
+        <div id='force1' style="background-color:grey;"></div>
+        <div id='grid1'></div>
+        <div id='grid2'></div>
+    </div>
+
+    <script>
+    var ctx = new Context();
+
+    var force1 = new ForceLayout(ctx, '#force1', 'db_catalog', 'num_rows');
+    var grid1 = new Grid(ctx, '#grid1', 'tables', ['id', 'tablename', 'num_rows']);
+    var grid2 = new Grid(ctx, '#grid2', 'foreignkeys', ['id', 'db_catalog', 'keyname', 'pktablename', 'fktablename']);
+
+    ctx.subscribe(force1);
+    ctx.subscribe(grid1);
+    ctx.subscribe(grid2);
+
+    var json = function(cfg, callback) {
+        console.log('running json for: ' + cfg.url);
+
+        $.ajax({
+            url: cfg.url,
+            data: {
+                "q": JSON.stringify(cfg.q)
+            },
+            dataType: "json",
+            contentType: "application/json",
+            success: function(result) {
+                callback(null, result.objects);
+            },
+            error: function(error) {
+                callback(error, null);
+            }
+        });
+    }
+
+    queue()
+        .defer(json, {
+            url: 'http://127.0.0.1:5000/api/mtable',
+            q: {
+                "filters": [{
+                    "name": "db_catalog",
+                    "op": "eq",
+                    "val": 'SF2015'
+                }]
+            }
+        })
+        .defer(json, {
+            url: 'http://127.0.0.1:5000/api/mforeignkey',
+            q: {
+                "filters": [{
+                    "name": "db_catalog",
+                    "op": "eq",
+                    "val": 'SF2015'
+                }]
+            }
+        })
+        .await(function(error, nodes, links) {
+            console.log(error, nodes, links);
+
+            var nodesdict = {};
+
+            _.each(nodes, function(node, i) {
+                var key = node.db_catalog + "" + node.db_schema + "" + node.tablename;
+                nodesdict[key] = {
+                    'node': node,
+                    'index': i
+                };
+            });
+
+            _.each(links, function(link) {
+                var srcKey = link.db_catalog + "" + link.pkdb_schema + "" + link.pktablename;
+                var tarKey = link.db_catalog + "" + link.fkdb_schema + "" + link.fktablename;
+
+                var srcNode = nodesdict[srcKey];
+                var tarNode = nodesdict[tarKey];
+
+                link['source'] = srcNode.index;
+                link['target'] = tarNode.index;
+                link['value'] = 1;
+            });
+
+            ctx.data('tables', nodes);
+            ctx.data('foreignkeys', links);
+
+            ctx.notify(null, {
+                type: '_INIT'
+            }, null);
+        });
+
+    // INIT
+    ctx.watch(function(origin) {
+        return true
+    }, function(destination) {
+        return destination.type() === '_TABULAR';
+    }, function(event) {
+        return event.type === '_INIT';
+    }, function(ctx, self, d) {
+        var data = ctx.data(self.channel());
+        self.render(data);
+    });
+
+    ctx.watch(function(origin) {
+        return true
+    }, function(destination) {
+        return destination.type() === '_NETWORK';
+    }, function(event) {
+        return event.type === '_INIT';
+    }, function(ctx, self, d) {
+        var nodes = ctx.data('tables');
+        var links = ctx.data('foreignkeys');
+        self.render({
+            nodes: nodes,
+            links: links
+        });
+    });
+
+
+    // PRESS ESCAPE / RESET
+    ctx.watch(function(origin) {
+        return true
+    }, function(destination) {
+        return destination.type() === '_TABULAR';
+    }, function(event) {
+        return event.type === '_KEYUP' && event.keycode === '_ESC';
+    }, function(ctx, self, d) {
+        var data = ctx.data(self.channel());
+        self.render(data);
+    });
+
+    ctx.watch(function(origin) {
+        return true
+    }, function(destination) {
+        return destination.type() === '_NETWORK';
+    }, function(event) {
+        return event.type === '_KEYUP' && event.keycode === '_ESC';
+    }, function(ctx, self, d) {
+        var nodes = ctx.data('tables');
+        var links = ctx.data('foreignkeys');
+        self.render({
+            nodes: nodes,
+            links: links
+        });
+    });
+
+    $('body').keyup(function(d) {
+        ctx.notify(null, {
+            type: '_KEYUP',
+            keycode: '_ESC'
+        }, null);
+    });
+
+
+
+    // CLICK NODE
+    ctx.watch(function(origin) {
+        return true;
+    }, function(destination) {
+        return destination.type() === '_NETWORK';
+    }, function(event) {
+        return event.type === '_CLICKNODE';
+    }, function(ctx, self, d) {
+        self.highlightNodes([d]);
+    });
+
+    ctx.watch(function(origin) {
+        return origin.type() === '_NETWORK';
+    }, function(destination) {
+        return destination.type() === '_TABULAR';
+    }, function(event) {
+        return event.type === '_CLICKNODE';
+    }, function(ctx, self, d) {
+
+        // get selectednodes
+
+        // get selectedlinks
+
+        if (self.id() === '#grid1') {
+            self.render([d]);
+        } else if (self.id() === '#grid2') {
+
+            var links = [];
+            var nkey = d.db_catalog + "" + d.db_schema + "" + d.tablename;
+            
+            _.each(ctx.data(self.channel()), function(link) {
+
+                var srcKey = link.source.db_catalog + "" + link.source.db_schema + "" + link.source.tablename;
+                var tarKey = link.target.db_catalog + "" + link.target.db_schema + "" + link.target.tablename;
+
+                if (srcKey === nkey || tarKey === nkey) {
+                    links.push(link);
+                }
+            });
+
+            self.render(links);
+        }
+    });
+
+    ctx.watch(function(origin) {
+        return origin.type() === '_TABULAR';
+    }, function(destination) {
+        return destination.type() === '_TABULAR';
+    }, function(event) {
+        return event.type === '_CLICKNODE';
+    }, function(ctx, self, d) {
+        self.highlightNodes([d]);
+    });
+
+    </script>
+</body>
+
+</html>
