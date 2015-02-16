@@ -42,14 +42,14 @@ function grid(config, context) {
 	        .enter()
 	        .append("td")
 	        .html(function(d) { return d.value; });
-	    
+
 	    return table;
 	}
 
 	self.render = function(data) {
 		if (table) table.remove();
 
-		table = tabulate(data, ["id", "sex", "age", "sequence"]);
+		table = tabulate(data, ["id", "year", "sequence"]);
 	}
 
 	/**
@@ -57,11 +57,11 @@ function grid(config, context) {
 	**/
 
 	self.handleMouseoverNode = function(d) {
-		
+
 	}
 
 	self.handleMouseleaveNode = function(d) {
-		
+
 	}
 
 	self.handleClickNode = function(d) {
@@ -74,7 +74,7 @@ function grid(config, context) {
 		    	objs = objs.concat(node.obj);
 			}
 		});
-		
+
 		var subset = _.uniq(objs, function(obj) {
 			return obj.id;
 		});
@@ -97,7 +97,7 @@ function grid(config, context) {
 
 	}
 
-	self.handleDblclickNode = function(d) { 
+	self.handleDblclickNode = function(d) {
 		table.select("tbody").selectAll("tr")
 			.style("opacity", config.basecfg.highlight_opacity)
 

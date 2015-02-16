@@ -24,7 +24,7 @@ if len(config.sections()) == 0:
 	print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
 	quit()
 
-def main():	
+def main():
 	sts = datetime.datetime.now()
 
 	miner = MetaMiner(type='pymysql').getInstance(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])

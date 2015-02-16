@@ -110,7 +110,7 @@ function basedata(config) {
 		var getChildByName = function(node, childname) {
 			var candidate = null;
 			node.children.forEach(function(child, index) {
-				if (child.name == childname) {
+				if (child.name === childname) {
 					candidate = child;
 					return;
 				}
@@ -145,7 +145,7 @@ function basedata(config) {
 
 			states.forEach(function(state) {
 				countstate(state);
-				currentNode.obj.push(line);
+				// currentNode.obj.push(line);
 
 				if (c + 1 < states.length) {
 					var candidate = getChildByName(currentNode, state);
@@ -173,7 +173,7 @@ function basedata(config) {
 						};
 						currentNode.children.push(candidate);
 					} else {
-						candidate.size++;
+						// candidate.size++;
 					}
 				}
 

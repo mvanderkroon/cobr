@@ -26,14 +26,14 @@ function context(basedata) {
 	// 	if (fn) {
 	// 		filtered = _.filter(basedata.objects, fn);
 	// 	}
-		
+
 	// 	var seen = _.countBy(filtered, function(obj) { return obj.sex });
 
 	// 	var data = [];
 	// 	_.each(seen, function(v, k) {
 	// 		data.push({"var": k, "count": v});
 	// 	});
-		
+
 	// 	return data;
 	// }
 
@@ -43,7 +43,7 @@ function context(basedata) {
 
 	//     	var nnode = {};
 	//     	for (prop in node) if (prop != 'children') nnode[prop] = node[prop];
-	    	
+
 	//     	return nnode;
 	// 	});
 	// }
@@ -56,10 +56,10 @@ function context(basedata) {
 		tooltip.transition()
 			.duration(200)
 			.style("opacity", 0.8);
-
+		console.log(d);
 		tooltip
-			.html("name: <b>" + d.name + "</b> <br/> frequency: <b>" + 
-				d.value + " (" + Math.round((d.value/basedata.nodecount) * 10000) / 100 + 
+			.html("name: <b>" + d.name + "</b> <br/> frequency: <b>" +
+				d.value + " (" + Math.round((d.value/basedata.nodecount) * 10000) / 100 +
 					"%) </b> <br/> depth: <b>" + d.depth + "</b>")
 			.style("left", ((d3.event.pageX) + 20) + "px")
 			.style("top", (d3.event.pageY) + "px");
@@ -89,7 +89,7 @@ function context(basedata) {
 	self.dblclickNode = function(d) {
 
 		// process tree to get subtree
-		if (d.parent && view_root && view_root.id == d.id) { // user clicked root / we are going to be drilling up 
+		if (d.parent && view_root && view_root.id == d.id) { // user clicked root / we are going to be drilling up
 			view_root = d.parent;
 			self.treeview = d.parent;
 		} else { // drilling down
@@ -106,7 +106,7 @@ function context(basedata) {
 		    	objs = objs.concat(node.obj);
 			}
 		});
-		
+
 		self.tabularview = _.uniq(objs, function(obj) {
 			return obj.id;
 		});

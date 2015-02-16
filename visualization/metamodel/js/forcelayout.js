@@ -9,7 +9,7 @@ var ForceLayout = function(config, ctx) {
     var default_cfg = {
         parent: '#forcelayout',
         nodeMinRadius: 5,
-        nodeMaxRadius: 40,
+        nodeMaxRadius: 30,
         nodeSizeBy: 'num_rows',
         nodeColorBy: 'db_catalog',
         linkColorBy: 'type'
@@ -56,7 +56,7 @@ var ForceLayout = function(config, ctx) {
     var nmin;
 
     var cscale;
-    var sscale = d3.scale.pow(); 
+    var sscale = d3.scale.pow();
 
     var linkColor = function(d) {
         if (d.type == 'explicit') return 'white';
@@ -87,7 +87,7 @@ var ForceLayout = function(config, ctx) {
             cscale(nodes[0].db_catalog)
         }
 
-        sscale.range([config.nodeMinRadius, config.nodeMaxRadius]).domain([nmin[config.nodeSizeBy], nmax[config.nodeSizeBy]]);     
+        sscale.range([config.nodeMinRadius, config.nodeMaxRadius]).domain([nmin[config.nodeSizeBy], nmax[config.nodeSizeBy]]);
 
         force
             .nodes(nodes)
@@ -174,7 +174,7 @@ var ForceLayout = function(config, ctx) {
         }
 
         function dragend(d) {
-            
+
         }
 
         function tick(e) {
@@ -221,11 +221,11 @@ var ForceLayout = function(config, ctx) {
             var links = context.links();
 
             self.render({links: links, nodes:nodes});
-            
+
         } else if (keyCode == 69) { // 'e' for expand selection
             var selectednodes = context.selectedNodes();
             var selectedlinks = context.selectedLinks();
-            
+
             self.highlightNodes(selectednodes);
             self.highlightLinks(selectedlinks);
         }
@@ -254,7 +254,7 @@ var ForceLayout = function(config, ctx) {
     ForceLayout.prototype.handleMouseleaveLink = function(d) {
         tooltip.transition()
             .duration(200)
-            .style("opacity", 0);   
+            .style("opacity", 0);
     }
 
     ForceLayout.prototype.handleMouseoverNode = function(d) {
@@ -285,13 +285,13 @@ var ForceLayout = function(config, ctx) {
     ForceLayout.prototype.handleClickNode = function(d) {
         var selectednodes = context.selectedNodes();
         var selectedlinks = context.selectedLinks();
-        
+
         self.highlightNodes(selectednodes);
         self.highlightLinks(selectedlinks);
     }
 
     ForceLayout.prototype.handleClickLink = function(d) {
-        
+
     }
 
     ForceLayout.prototype.handleDblclickNode = function(d) {
@@ -300,7 +300,7 @@ var ForceLayout = function(config, ctx) {
 
     ForceLayout.prototype.highlightNodes = function(nodes) {
         var ids = _.pluck(nodes, 'id');
-        
+
         svg.selectAll(".node")
             .style("opacity", 0.2)
             .filter(function(node) {
@@ -320,7 +320,7 @@ var ForceLayout = function(config, ctx) {
 
     ForceLayout.prototype.highlightLinks = function(links) {
         var ids = _.pluck(links, 'id');
-        
+
         svg.selectAll(".link")
             .style("opacity", 0.1)
             .filter(function(link) {

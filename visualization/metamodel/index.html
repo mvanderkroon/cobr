@@ -80,7 +80,7 @@ table {
             </div>
         </div>
         <div class="row" id="controls" style="background-color:#cfcfcf;">
-            
+
         </div>
     </div>
 
@@ -93,7 +93,7 @@ table {
             <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
                 <li class="active"><a href="#tables" data-toggle="tab">Tables</a></li>
                 <!-- <li><a href="#links" data-toggle="tab">Foreign Keys</a></li> -->
-                
+
             </ul>
             <div id="my-tab-content" class="tab-content">
                 <div class="tab-pane active" id="tables">
@@ -102,11 +102,11 @@ table {
                 <!-- <div class="tab-pane" id="links">
                     <div id='linkgrid'></div>
                 </div> -->
-                
+
             </div>
         </div>
-         
-        
+
+
     </div>
 
     <script>
@@ -126,7 +126,7 @@ table {
 
     $(document).keyup(function(e) {
         if (!e) e = window.event;
-        ctx.keyUp(e);        
+        ctx.keyUp(e);
     });
 
     var force1 = new ForceLayout({
@@ -325,7 +325,7 @@ table {
             });
         }
     }
-    
+
     window.onload = function() {
         doRender();
     }

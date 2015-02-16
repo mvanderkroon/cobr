@@ -8,7 +8,7 @@
 	<div id="sequence"></div>
 	<div id="sunburst" style="float:left;width:49%;"></div>
 	<div id="histogram" style="float:left;width:49%;height:99px;"></div>
-	<div id="histogram2" style="float:left;width:49%;height:99px;"></div>
+	<!--<div id="histogram2" style="float:left;width:49%;height:99px;"></div> -->
 	<div id="grid" style="float:left;width:45%;height:400px;"></div>
 	<!-- <div id="force" style="float:left;width:49%;"></div> -->
 
@@ -45,8 +45,8 @@
 		}
 
 		// the input file needs a header!
-		d3.csv("smpl_data/random_sample.csv", function(lines) {
-			
+		d3.csv("smpl_data/nrf_rw_sequences.csv", function(lines) {
+
 			var bd1 = new basedata();
 			bd1.init(lines);
 
@@ -62,13 +62,13 @@
 
 			var hg = new histogram({
 				'parent': '#histogram',
-				'variable': 'age'
+				'variable': 'year'
 			}, ctx1);
 
-			var hg = new histogram({
-				'parent': '#histogram2',
-				'variable': 'sex'
-			}, ctx1);
+			// var hg = new histogram({
+			// 	'parent': '#histogram2',
+			// 	'variable': 'sex'
+			// }, ctx1);
 
 			var gr = new grid({
 				'parent': '#grid'

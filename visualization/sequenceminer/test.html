@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+</head>
+
+<body>
+    <script src="lib/underscore.js"></script>
+
+    <script>
+
+    var alldata = [{
+        id: 0,
+        sequence: 0,
+        dimA: 'valueA',
+        dimB: 'valueB'
+    }, {
+        id: 0,
+        sequence: 1,
+        dimA: 'valueA1',
+        dimB: 'valueB'
+    }, {
+        id: 1,
+        sequence: 0,
+        dimA: 'valueA',
+        dimB: 'valueB'
+    }, {
+        id: 1,
+        sequence: 1,
+        dimA: 'valueA1',
+        dimB: 'valueB1'
+    }];
+
+    var grouped_by_id = _.groupBy(alldata, 'id');
+
+    console.log(_.chain(grouped[0]).map(function(row) {
+        return row.dimB
+    }).uniq().value());
+    </script>
+</body>
+
+</html>

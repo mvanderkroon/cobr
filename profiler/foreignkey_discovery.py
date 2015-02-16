@@ -61,15 +61,15 @@ class Discovery():
 	# 	result = []
 
 	# 	q = """
-	# 		SELECT 
+	# 		SELECT
 	# 			{0}, COUNT(*)
-	# 		FROM 
+	# 		FROM
 	# 			[{1}].[{2}]
 	# 		GROUP BY
 	# 			{0}
 	# 		ORDER BY COUNT(*) DESC
 	# 		""".format(selectclause, schema, tablename)
-		
+
 	# 	print(q)
 	# 	print('')
 
@@ -80,7 +80,7 @@ class Discovery():
 	# 			result.append(list(row))
 	# 		else:
 	# 			result.append(list(row))
-				
+
 	# 	return result;
 
 	def cartesian(self, L):
@@ -96,7 +96,8 @@ class Discovery():
 		for value in values:
 			value = ''.join(str(value))
 			hashes.append(hash(value))
-		return sorted(hashes)[0:k]
+		l = len(hashes)
+		return sorted(hashes)[l-k:l]
 
 	def inclusion(self, a, b):
 		if len(a) == 0 or len(b) == 0: # apparently one list of values is empty, so inclusion should always be zero
@@ -125,7 +126,7 @@ class Discovery():
 
 			hist = []
 			bins = []
-			try: 
+			try:
 				# print('trying as is..')
 				sum(l)
 				hist, bins = np.histogram(l, bins=binsize, density=True) # sqrt to improve accuracy for larger tables
@@ -172,7 +173,7 @@ class Discovery():
 		for pk in pkall: # foreach primary key (single and multi)
 			pkcollst = pk.db_columns.split(self.colseparator)
 			n = len(pkcollst)
-			
+
 			for keycolumn_name in pkcollst: # foreach column in primary key
 				for candidate in self.columns: # foreach column as foreign key candidate
 					if self.inclusion(bksketches[(candidate.db_schema, candidate.tablename, candidate.columnname)], bksketches[(pk.db_schema, pk.tablename, keycolumn_name)]) >= theta and (candidate.tablename != pk.tablename):
@@ -181,33 +182,34 @@ class Discovery():
 						if n > 1: # in case we are dealing with a multi column pk
 							if (pk.db_columns, keycolumn_name) not in s:
 								s[(pk.db_columns, keycolumn_name)] = []
-							# dictionary s indexes on (<pk name>, <pk column>) where the pk name is generic (can be 
+							# dictionary s indexes on (<pk name>, <pk column>) where the pk name is generic (can be
 							# just concatenation of the columnnames), e.g.: ('id|name', 'id') and ('id|name', 'name')
 							# indicate the two entries in s for PK 'id|name'. For each entry we store a list of
 							# candidate columns found in other tables
 							s[(pk.db_columns, keycolumn_name)].append(candidate)
 			if n > 1:
 				bksketches[(pk.db_schema, pk.tablename, pk.db_columns)] = self.bottomksketch(self.getDataFn(pk.db_schema, pk.db_columns.split(self.colseparator), pk.tablename))
-			
+
 			quantiles[(pk.db_schema, pk.tablename, pk.db_columns)] = self.quantilehistogram(self.getDataFn(pk.db_schema, pk.db_columns.split(self.colseparator), pk.tablename))
 
 		# phase 2
+
+		# fks: dictionary that indexes on (<foreignkey table>, <primary key column>)
+		# value of the dictionary are those candidate columns in <foreignkey table> for <primary key column>
+		# TBD: remove the table loop
+		fks = {}
+		for kvp in s:
+			spkcolname = kvp[1]
+			for e in s[kvp]:
+				key = (e.tablename, spkcolname)
+				if key not in fks:
+					fks[key] = []
+				fks[key].append(e)
+
 		for pkm in self.pkmulti:
 			pkcollst = pkm.db_columns.split(self.colseparator)
 			print(pkm)
 			# print()
-
-			# fks: dictionary that indexes on (<foreignkey table>, <primary key column>)
-			# value of the dictionary are those candidate columns in <foreignkey table> for <primary key column>
-			# TBD: remove the table loop
-			fks = {} 
-			for kvp in s:
-				spkcolname = kvp[1]
-				for e in s[kvp]:
-					key = (e.tablename, spkcolname)
-					if key not in fks:
-						fks[key] = []
-					fks[key].append(e)
 
 			# for each table in the database, check if we have candidates in fks for this PK, if we do: get cartesian
 			# product and store in the fm list
@@ -227,7 +229,7 @@ class Discovery():
 		for flst,pk in fm:
 			pkcollst = pk.db_columns.split(self.colseparator)
 			fcols = [ c.columnname for c in flst ]
-			
+
 			fschema = flst[0].db_schema # TBD: ugly indices here
 			ftable = flst[0].tablename # TBD: and here
 
@@ -261,7 +263,7 @@ class Discovery():
 				emdscore = 0
 				try:
 					for i in range(len(qfk)):
-						fkhist = qfk[i][0] 
+						fkhist = qfk[i][0]
 						pkhist = qpk[i][0]
 
 						fkbins = qfk[i][1]
@@ -280,9 +282,9 @@ class Discovery():
 				nfk.score = emdscore
 
 				result.append((nfk, emdscore))
-		
+
 		# print("## len(Q): " + str(len(q)))
-		
+
 		return sorted(result, key=lambda kvp: kvp[1], reverse=False)
 
 def pruneDuplicateFks(fks):
@@ -307,7 +309,7 @@ def main():
 	# filter syntax, see sqlalchemy documentation
 	tables = reader.getTables(filter=Table.db_catalog==options.db_catalog)
 	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
-	pks = reader.getPrimaryKeys(filter=PrimaryKey.db_catalog==options.db_catalog) 
+	pks = reader.getPrimaryKeys(filter=PrimaryKey.db_catalog==options.db_catalog)
 	reader.close()
 
 	# split primary keys into singlecolumn and multicolumn keys
