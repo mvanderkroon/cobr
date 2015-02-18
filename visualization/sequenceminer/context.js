@@ -56,7 +56,7 @@ function context(basedata) {
 		tooltip.transition()
 			.duration(200)
 			.style("opacity", 0.8);
-		console.log(d);
+
 		tooltip
 			.html("name: <b>" + d.name + "</b> <br/> frequency: <b>" +
 				d.value + " (" + Math.round((d.value/basedata.nodecount) * 10000) / 100 +

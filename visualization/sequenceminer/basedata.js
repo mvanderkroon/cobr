@@ -45,8 +45,8 @@ function basedata(config) {
 		self.tree = result.tree;
 		self.partition = d3.layout.partition()
 			.value(function(d) {
-				return d.size
-			})(result.tree);
+				return d.size;
+			})(self.tree);
 
 		self.nodecount = lines.length;
 		self.nodecounts = result.nodecounts;
@@ -141,7 +141,7 @@ function basedata(config) {
 			var currentNode = root;
 
 			var states = line.sequence.split(separator);
-			states.push('END')
+			states.push('END');
 
 			states.forEach(function(state) {
 				countstate(state);
@@ -171,9 +171,11 @@ function basedata(config) {
 							"obj": [line],
 							"size": 1
 						};
+
 						currentNode.children.push(candidate);
 					} else {
-						// candidate.size++;
+						// console.log(candidate);
+						candidate.size++;
 					}
 				}
 
