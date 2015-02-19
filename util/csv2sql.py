@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3
-
 __version__ = "0.4"
 __author__ = "James Mills"
 __date__ = "3rd February 2011"
@@ -85,7 +83,7 @@ def main():
     header = rows[0]
 
     create_table_stmt = create_table(header, opts)
-    
+
     print(create_table_stmt)
     print()
 

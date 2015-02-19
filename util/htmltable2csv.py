@@ -1,4 +1,3 @@
-#!/Library/Frameworks/Python.framework/Versions/2.7/bin/python
 import os
 import requests
 
@@ -34,7 +33,7 @@ def main():
 		html = requests.get(options.url).text
 	else:
 		html = open(options.url, 'r').read()
-	
+
 	soup = BeautifulSoup(html)
 
 	result = ''
@@ -52,7 +51,7 @@ def main():
 			result += processTable(table)
 		except Exception as ex:
 			pass
-	
+
 	print(result[:-1])
 
 if __name__ == '__main__':
