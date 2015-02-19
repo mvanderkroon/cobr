@@ -36,7 +36,7 @@ def main():
 	pks = miner.getPrimaryKeys()
 
 	print('cols: ' + str(len(columns)))
-	print('tabs: ' + str(len(tables)))
+	print('tables: ' + str(len(tables)))
 	print('fks: ' + str(len(fks)))
 	print('pks: ' + str(len(pks)))
 
@@ -48,12 +48,11 @@ def main():
 
 	# writer.reset() # dropping the database tables and recreating them
 
-	# uncomment this for actual writing to database
-	# writer.writeTables(tables)
-	# writer.writeColumns(columns)
-	# writer.writePrimaryKeys(pks)
-	# writer.writeForeignKeys(fks)
-	# writer.close()
+	writer.writeTables(tables)
+	writer.writeColumns(columns)
+	writer.writePrimaryKeys(pks)
+	writer.writeForeignKeys(fks)
+	writer.close()
 
 	print('time elapsed: ' + str(datetime.datetime.now() - sts))
 
