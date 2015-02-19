@@ -8,8 +8,6 @@ import flask.ext.restless
 
 from objects import ForeignKey, PrimaryKey, Table, Column
 
-import pymssql
-
 import ConfigParser
 
 config = ConfigParser.ConfigParser()
