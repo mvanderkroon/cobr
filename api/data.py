@@ -22,13 +22,15 @@ if len(config.sections()) == 0:
 
 engine = create_engine(config.get('DATAAPI', 'connection_string'))
 insp = reflection.Inspector.from_engine(engine)
-connection = engine.connect()
 
 app = Flask(__name__)
 cors = CORS(app)
 
 def sql2csv(name, delimiter, quotechar):
+    connection = engine.connect()
     query = connection.execute("SELECT * FROM " + name).fetchall()
+    connection.close()
+
     output = io.BytesIO()
     writer = csv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL)
 
