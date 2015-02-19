@@ -10,6 +10,8 @@ from sqlalchemy.engine import reflection
 from flask import Flask
 from flask import request
 
+from flask_cors import CORS
+
 import ConfigParser
 
 config = ConfigParser.ConfigParser()
@@ -23,6 +25,7 @@ insp = reflection.Inspector.from_engine(engine)
 connection = engine.connect()
 
 app = Flask(__name__)
+cors = CORS(app)
 
 def sql2csv(name, delimiter, quotechar):
     query = connection.execute("SELECT * FROM " + name).fetchall()
