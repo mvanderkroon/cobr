@@ -29,10 +29,12 @@
 * pip install elasticsearch
 * pip install requests
 
-# Show case
+# Showcase
 The show case will detail how to profile a database, visualize the metamodel, index an Elastic Search instance for deep database search as well as expose the database via HTTP.
 
 Let's get some test data from [launchpad](https://launchpad.net/test-db/employees-db-1/1.0.6/+download/employees_db-full-1.0.6.tar.bz2) so that we have a predictable data set to work from.
+
+TBD...
 
 # Profiling
 First, create a `config.ini` file by copying the `template_config.ini` file and filling in the empty fields.
