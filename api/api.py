@@ -8,13 +8,12 @@ import flask.ext.restless
 
 from objects import ForeignKey, PrimaryKey, Table, Column
 
-import ConfigParser
-
-config = ConfigParser.ConfigParser()
+import configparser
+config = configparser.ConfigParser()
 config.read('config.ini')
 if len(config.sections()) == 0:
-	print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-	quit()
+    print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
+    quit()
 
 # Create the Flask application and the Flask-SQLAlchemy object.
 app = flask.Flask(__name__)
@@ -38,10 +37,10 @@ manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 
 # Create API endpoints, which will be available at /api/<tablename> by
 # default. Allowed HTTP methods can be specified as well.
-manager.create_api(Table, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=None, allow_functions=True)
-manager.create_api(Column, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=None, allow_functions=True)
-manager.create_api(ForeignKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=None, allow_functions=True)
-manager.create_api(PrimaryKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=None, allow_functions=True)
+manager.create_api(Table, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
+manager.create_api(Column, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
+manager.create_api(ForeignKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
+manager.create_api(PrimaryKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
 
 app.after_request(add_cors_headers)
 
