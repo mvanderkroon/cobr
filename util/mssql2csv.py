@@ -18,7 +18,7 @@ for table in tables:
 
     with open(os.path.join('data', '{0}.{1}.{2}.csv'.format(database, table[0], table[1])), 'w', newline='', encoding='utf-8') as fp:
         a = csv.writer(fp,delimiter = ",", quoting=csv.QUOTE_ALL)
-        
+
         # get columns for table
         cursor.execute(""" SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = '{0}' AND TABLE_SCHEMA = '{1}' AND TABLE_NAME = '{2}' ORDER BY ORDINAL_POSITION ASC """.format(database, table[0], table[1]))
         columns = cursor.fetchall()
