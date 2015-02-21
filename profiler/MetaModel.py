@@ -1,15 +1,13 @@
-
-from sqlalchemy.schema import Table as sTable
+from sqlalchemy.schema import Table
 from sqlalchemy import MetaData
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import reflection
 
 from contextlib import contextmanager
 
 from optparse import OptionParser
 
-class metamodel():
+class MetaModel():
 
     @contextmanager
     def dbconnection(self, engine):
@@ -29,6 +27,7 @@ class metamodel():
         insp = reflection.Inspector.from_engine(engine)
         metadata = MetaData()
 
+        # 'mine' the subject database for it's metamodel
         with self.dbconnection(engine) as connection:
             tablenames = insp.get_table_names()
 
@@ -45,8 +44,9 @@ class metamodel():
             # getting all tables
             self.stables = []
             for tablename in tablenames:
-                stable = sTable(tablename, metadata, autoload=True, autoload_with=engine)
-                # print(stable.name, connection.execute(stable.count()).fetchone()[0], len(stable.columns))
+                stable = Table(tablename, metadata, autoload=True, autoload_with=engine)
+                # stable['num_rows'] = connection.execute(stable.count()).fetchone()[0]
+                # stable['num_columns'] = len(stable.columns)
                 self.stables.append(stable)
 
             # getting all columns
@@ -68,11 +68,11 @@ class metamodel():
         return self.sfks
 
 parser = OptionParser()
-parser.add_option("-c", "--connection_string", dest="connection_string", help="connection_string of the src-database", metavar="string")
+parser.add_option("-c", "--connection_string", dest="connection_string", help="connection_string for the subject-database", metavar="string")
 (options, args) = parser.parse_args()
 
 if __name__ == "__main__":
-    mm = metamodel(options.connection_string)
+    mm = MetaModel(options.connection_string)
     tables = mm.tables()
     columns = mm.columns()
     pks = mm.primaryKeys()
