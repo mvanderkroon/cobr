@@ -1,4 +1,4 @@
-import sys
+import datetime, math, sys
 sys.path.append("../util")
 
 from osxnotifications import Notifier
@@ -64,10 +64,12 @@ parser.add_option("-c", "--connection_string", dest="connection_string", help="c
 if __name__ == "__main__":
     mm = MetaModel(options.connection_string)
 
+    sts = datetime.datetime.now()
     processor = MPTableProcessor(connection_string = options.connection_string, tables = mm.tables())
-
     result = processor.execute(processes=32, verbose=True)
+    duration = datetime.datetime.now() - sts
+
     print('number of processed tables: ' + str(len(result)))
 
     # Calling the notification function
-    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables')
+    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables in ' + str(math.floor(duration.total_seconds())) + ' seconds')

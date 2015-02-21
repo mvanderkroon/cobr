@@ -1,4 +1,4 @@
-import sys
+import datetime, math, sys
 sys.path.append("../util")
 
 from osxnotifications import Notifier
@@ -86,12 +86,15 @@ if __name__ == "__main__":
 
     mm = MetaModel(options.connection_string)
 
+    sts = datetime.datetime.now()
     processor = MPColumnProcessor(connection_string = options.connection_string, \
         columns = mm.columns(), \
         columnprocessor = NumpyColumnProcessor)
-
     result = processor.execute(processes=32, verbose=True)
+
+    duration = datetime.datetime.now() - sts
+
     print('number of processed columns: ' + str(len(result)))
 
     # Calling the notification function
-    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPColumnProcessor done!', message='processed: ' + str(len(result)) + ' columns')
+    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPColumnProcessor done in!', message='processed: ' + str(len(result)) + ' columns in ' + str(math.floor(duration.total_seconds())) + ' seconds')
