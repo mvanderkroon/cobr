@@ -1,4 +1,4 @@
-import sys, datetime, argparse
+import sys, datetime, argparse, math
 sys.path.append("../util")
 
 from osxnotifications import Notifier
@@ -6,7 +6,10 @@ from MetaModel import MetaModel
 from MPColumnProcessor import MPColumnProcessor
 from MPTableProcessor import MPTableProcessor
 from NumpyColumnProcessor import NumpyColumnProcessor
-from Mapper import TableMapper, ColumnMapper
+from Mapper import TableMapper, ColumnMapper, PrimaryKeyMapper, ForeignKeyMapper
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 def main(args):
     sts = datetime.datetime.now()
@@ -15,12 +18,20 @@ def main(args):
 
     columnmapper = ColumnMapper()
     tablemapper = TableMapper()
+    pkmapper = PrimaryKeyMapper()
+    fkmapper = ForeignKeyMapper()
 
     columns = miner.columns()
     tables = miner.tables()
     fks = miner.foreignKeys()
     pks = miner.primaryKeys()
 
+    # print(miner.schemas())
+    # exit()
+
+    # for column in columns:
+    #     print(column)
+    # exit()
     print('## cols: ' + str(len(columns)))
     print('## tables: ' + str(len(tables)))
     print('## fks: ' + str(len(fks)))
@@ -30,37 +41,59 @@ def main(args):
     print('## processing columns...')
     cp = MPColumnProcessor(connection_string = args.src,
         columns = columns, \
-        columnprocessor = NumpyColumnProcessor)
-    col_result = cp.execute(processes=32, verbose=True)
+        columnprocessor = NumpyColumnProcessor,
+        mapper = columnmapper)
+    pcolumns = cp.execute(processes=32, verbose=True)
+
+    cets = datetime.datetime.now()
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='MPColumnProcessor done!',
+        message='processed: ' + str(len(pcolumns)) + ' columns in ' + str(math.floor((cets - sts).total_seconds())) + ' seconds')
 
     print('')
     print('## processing tables...')
-    tp = MPTableProcessor(connection_string = args.src, tables = tables)
-    table_result = tp.execute(processes=32, verbose=True)
+    tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
+    ptables = tp.execute(processes=32, verbose=True)
 
-    tablemapper.multiple(table_result)
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='MPTableProcessor done!',
+        message='processed: ' + str(len(ptables)) + ' tables in ' + str(math.floor((datetime.datetime.now() - cets).total_seconds())) + ' seconds')
+    # ppks = pkmapper.multiple(pks)
+    # pfks = fkmapper.multiple(fks)
 
-    # TBD: load all columns/tables at this point, then incrementally merge() as below operations become done
+    if not args.dry_run:
+        engine = create_engine(args.target)
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
-    # ColumnProcessor(columns=columns, getDataFn=miner.getDataForColumn, processor=NumpyColumnProcessor).execute()
-    # PostProcessor(tables=tables, columns=columns, explicit_primarykeys=pks, explicit_foreignkeys=fks, processor=SimplePostProcessor)
-    # TableProcessor(tables=tables, processor=miner).execute()
-
-    # writer.reset() # dropping the database tables and recreating them
-
-    # writer.writeTables(tables)
-    # writer.writeColumns(columns)
-    # writer.writePrimaryKeys(pks)
-    # writer.writeForeignKeys(fks)
-    # writer.close()
+        writeToDb(session, ptables)
+        writeToDb(session, pcolumns)
+        # writeToDb(session, ppks)
+        # writeToDb(session, pfks)
 
     print('')
     print('## time elapsed: ' + str(datetime.datetime.now() - sts))
+
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='Profiling done!',
+        message='duration: ' + str(math.floor((datetime.datetime.now() - sts).total_seconds())) + ' seconds')
+
+def writeToDb(session, objects):
+    try:
+        for obj in objects:
+            session.add(obj)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
     parser.add_argument("-t", "--target", help="connection_string for the target-database", metavar="string")
+    parser.add_argument("-d", "--dry_run", help="flag to make a dry-run without storing the result to target database", action='store_true', default=False)
     args = parser.parse_args()
 
     main(args)

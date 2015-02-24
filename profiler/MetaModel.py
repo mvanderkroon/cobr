@@ -1,13 +1,16 @@
 from sqlalchemy.schema import Table
 from sqlalchemy import MetaData
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import URL
 from sqlalchemy.engine import reflection
 
 from contextlib import contextmanager
 
-from optparse import OptionParser
+import argparse
 
 class MetaModel():
+
+
 
     @contextmanager
     def dbconnection(self, engine):
@@ -22,57 +25,93 @@ class MetaModel():
         finally:
             connection.close()
 
-    def __init__(self, connection_string, pool_size=3, pool_recycle=3600):
-        engine = create_engine(connection_string, pool_size=pool_size, pool_recycle=pool_recycle)
+    def __init__(self, connection_string, pool_size=20, pool_recycle=3600):
+        self.__excluded_schemas__ = ['db_accessadmin', 'db_backupoperator', 'db_datareader', 'db_datawriter', 'db_ddladmin', 'db_denydatareader', 'db_denydatawriter', 'db_owner', 'db_securityadmin', 'INFORMATION_SCHEMA', 'sys', 'information_schema', 'performance_schema']
+
+        engine = create_engine(connection_string)
         insp = reflection.Inspector.from_engine(engine)
-        metadata = MetaData()
+
+        self._pks = []
+        self._fks = []
+        self._tables = []
+        self._columns = []
+        self._schemanames = []
+        self._db_catalog = ''
+
+        tabledict = {}
+        coldict = {}
 
         # 'mine' the subject database for it's metamodel
         with self.dbconnection(engine) as connection:
-            tablenames = insp.get_table_names()
+            self._db_catalog = connection_string[connection_string.rfind('/')+1:]
+            if (engine.url.get_dialect().name == 'mysql'):
+                self._schemanames = [engine.url.translate_connect_args()['database']]
+            else:
+                self._schemanames = insp.get_schema_names()
 
-            # getting all primary keys
-            self.spks = []
-            for tablename in tablenames:
-                self.spks.extend(insp.get_primary_keys(tablename))
+            for schemaname in self._schemanames:
+                if schemaname in self.__excluded_schemas__:
+                    continue
 
-            # getting all foreign keys
-            self.sfks = []
-            for tablename in tablenames:
-                self.sfks.extend(insp.get_foreign_keys(tablename))
+                metadata = MetaData(schema=schemaname)
+                tablenames = insp.get_table_names(schema=schemaname)
 
-            # getting all tables
-            self.stables = []
-            for tablename in tablenames:
-                stable = Table(tablename, metadata, autoload=True, autoload_with=engine)
-                # stable['num_rows'] = connection.execute(stable.count()).fetchone()[0]
-                # stable['num_columns'] = len(stable.columns)
-                self.stables.append(stable)
+                # getting all primary keys
+                for tablename in tablenames:
+                    self._pks.extend(insp.get_primary_keys(table_name=tablename, schema=schemaname))
 
-            # getting all columns
-            self.scolumns = []
-            for stable in self.stables:
-                for column in stable.columns:
-                    self.scolumns.append(column)
+                # getting all foreign keys
+                for tablename in tablenames:
+                    self._fks.extend(insp.get_foreign_keys(table_name=tablename, schema=schemaname))
+
+                # getting all tables
+                for tablename in tablenames:
+                    table = Table(tablename, metadata, autoload=True, autoload_with=engine)
+                    table.info['schemaname'] = schemaname
+                    table.info['db_catalog'] = self.db_catalog()
+                    table.info['num_explicit_inlinks'] = len(self.inlinksForTable(table));
+                    table.info['num_explicit_outlinks'] = len(self.outlinksForTable(table));
+                    self._tables.append(table)
+
+                    for column in table.columns:
+                        column.info['schemaname'] = schemaname
+                        column.info['db_catalog'] = self.db_catalog()
+                        self._columns.append(column)
 
     def tables(self):
-        return self.stables
+        return self._tables
 
     def columns(self):
-        return self.scolumns
+        return self._columns
 
     def primaryKeys(self):
-        return self.spks
+        return self._pks
 
     def foreignKeys(self):
-        return self.sfks
+        return self._fks
 
-parser = OptionParser()
-parser.add_option("-c", "--connection_string", dest="connection_string", help="connection_string for the subject-database", metavar="string")
-(options, args) = parser.parse_args()
+    def schemas(self):
+        return self._schemanames
+
+    def db_catalog(self):
+        return self._db_catalog
+
+    def inlinksForTable(self, table):
+        inlinks = []
+        for efk in self.foreignKeys():
+            if efk['referred_table'] == table.name and efk['referred_schema'] == table.schema:
+                inlinks.append(efk)
+        return inlinks
+
+    def outlinksForTable(self, table):
+        return table.foreign_keys
 
 if __name__ == "__main__":
-    mm = MetaModel(options.connection_string)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
+    args = parser.parse_args()
+
+    mm = MetaModel(args.src)
     tables = mm.tables()
     columns = mm.columns()
     pks = mm.primaryKeys()

@@ -151,6 +151,6 @@ class NumpyColumnProcessor():
 
 			except Exception as ex:
 				retdict[operation['name']] = None
-				raise ex
+				print(ex)
 
 		return retdict
