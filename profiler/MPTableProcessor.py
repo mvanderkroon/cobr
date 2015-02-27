@@ -20,12 +20,12 @@ class MPTableProcessor():
 
     def execute(self, processes=32, verbose=False):
         pool = Pool(processes=processes)
-        result = []
+        result = Queue()
         if verbose:
             print('')
 
         for i, _ in enumerate(pool.imap_unordered(self.profileOneTable, self.tables)):
-            result.append(_)
+            result.put(_)
 
             if verbose:
                 sys.stdout.write("\033[1A")
@@ -34,6 +34,8 @@ class MPTableProcessor():
                 sys.stdout.write(totalprogress)
                 sys.stdout.flush()
 
+        pool.close()
+        result.close()
         return result;
 
     def profileOneTable(self, table=None):

@@ -10,8 +10,6 @@ import argparse
 
 class MetaModel():
 
-
-
     @contextmanager
     def dbconnection(self, engine):
         """Provide a transactional scope around a series of operations."""
@@ -58,7 +56,7 @@ class MetaModel():
 
                 # getting all primary keys
                 for tablename in tablenames:
-                    self._pks.extend(insp.get_primary_keys(table_name=tablename, schema=schemaname))
+                    self._pks.extend(insp.get_pk_constraint(table_name=tablename, schema=schemaname))
 
                 # getting all foreign keys
                 for tablename in tablenames:

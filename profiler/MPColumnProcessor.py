@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select
 
 from MetaModel import MetaModel
-from multiprocessing import Pool
+from multiprocessing import Pool, Queue
 
 from contextlib import contextmanager
 
@@ -28,12 +28,12 @@ class MPColumnProcessor():
 
     def execute(self, processes=32, verbose=False):
         pool = Pool(processes=processes)
-        result = []
+        result = Queue()
         if verbose:
             print('')
 
         for i, _ in enumerate(pool.imap_unordered(self.profileOneColumn, self.columns)):
-            result.append(_)
+            result.put(_)
 
             if verbose:
                 sys.stdout.write("\033[1A")
@@ -41,6 +41,8 @@ class MPColumnProcessor():
                 sys.stdout.write(totalprogress)
                 sys.stdout.flush()
 
+        pool.close()
+        result.close()
         return result;
 
     def profileOneColumn(self, column=None):
