@@ -58,19 +58,18 @@ class MPTableProcessor():
             conn.close()
 
 if __name__ == "__main__":
-    pass
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
+    args = parser.parse_args()
 
-    # mm = MetaModel(args.src)
+    mm = MetaModel(args.src)
 
-    # sts = datetime.datetime.now()
-    # processor = MPTableProcessor(connection_string = args.src, tables = mm.tables())
-    # result = processor.execute(processes=32, verbose=True)
-    # duration = datetime.datetime.now() - sts
+    sts = datetime.datetime.now()
+    processor = MPTableProcessor(connection_string = args.src, tables = mm.tables())
+    result = processor.execute(processes=32, verbose=True)
+    duration = datetime.datetime.now() - sts
 
-    # print('number of processed tables: ' + str(len(result)))
+    print('number of processed tables: ' + str(len(result)))
 
-    # # Calling the notification function
-    # Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables in ' + str(math.floor(duration.total_seconds())) + ' seconds')
+    # Calling the notification function
+    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables in ' + str(math.floor(duration.total_seconds())) + ' seconds')
