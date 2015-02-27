@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select
 
 from MetaModel import MetaModel
-from multiprocessing import Pool, Queue
+from multiprocessing import Pool
 
 from contextlib import contextmanager
 
@@ -28,12 +28,12 @@ class MPColumnProcessor():
 
     def execute(self, processes=32, verbose=False):
         pool = Pool(processes=processes)
-        result = Queue()
+        result = []
         if verbose:
             print('')
 
         for i, _ in enumerate(pool.imap_unordered(self.profileOneColumn, self.columns)):
-            result.put(_)
+            result.append(_)
 
             if verbose:
                 sys.stdout.write("\033[1A")
@@ -42,8 +42,7 @@ class MPColumnProcessor():
                 sys.stdout.flush()
 
         pool.close()
-        result.close()
-        return result;
+        return result
 
     def profileOneColumn(self, column=None):
         try:
@@ -67,22 +66,21 @@ class MPColumnProcessor():
 
 
 if __name__ == "__main__":
-    pass
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
+    args = parser.parse_args()
 
-    # mm = MetaModel(args.src)
+    mm = MetaModel(args.src)
 
-    # sts = datetime.datetime.now()
-    # processor = MPColumnProcessor(connection_string = args.src, \
-    #     columns = mm.columns(), \
-    #     columnprocessor = NumpyColumnProcessor)
-    # result = processor.execute(processes=32, verbose=True)
+    sts = datetime.datetime.now()
+    processor = MPColumnProcessor(connection_string = args.src, \
+        columns = mm.columns(), \
+        columnprocessor = NumpyColumnProcessor)
+    result = processor.execute(processes=32, verbose=True)
 
-    # duration = datetime.datetime.now() - sts
+    duration = datetime.datetime.now() - sts
 
-    # print('number of processed columns: ' + str(len(result)))
+    print('number of processed columns: ' + str(len(result)))
 
-    # # Calling the notification function
-    # Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPColumnProcessor done!', message='processed: ' + str(len(result)) + ' columns in ' + str(math.floor(duration.total_seconds())) + ' seconds')
+    # Calling the notification function
+    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPColumnProcessor done!', message='processed: ' + str(len(result)) + ' columns in ' + str(math.floor(duration.total_seconds())) + ' seconds')
