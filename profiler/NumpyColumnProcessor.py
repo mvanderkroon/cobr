@@ -7,53 +7,29 @@ class NumpyColumnProcessor():
 		self.data = data
 
 	def min(self, data):
-		try:
-			return float(np.min(data))
-		except Exception as ex:
-			return None
+		return np.min(data).item()
 
 	def max(self, data):
-		try:
-			return float(np.max(data))
-		except:
-			return None
+		return np.max(data).item()
 
 	def mean(self, data):
-		try:
-			return float(np.mean(data))
-		except:
-			return None
+		return np.mean(data).item()
 
 	def var(self, data):
-		try:
-			return float(np.var(data))
-		except:
-			return None
+		return np.var(data).item()
 
 	def median(self, data):
-		try:
-			return float(np.median(data))
-		except:
-			return None
+		return np.median(data).item()
 
 	def std(self, data):
-		try:
-			return float(np.std(data))
-		except:
-			return None
+		return np.std(data).item()
 
 	def sum(self, data):
-		try:
-			return float(np.sum(data))
-		except:
-			return None
+		return np.sum(data).item()
 
 	def mode(self, data):
-		try:
-			c = Counter(data)
-			return float(c.most_common(1)[0][0])
-		except:
-			return None
+		c = Counter(data)
+		return c.most_common(1)[0][0]
 
 	def positiveCount(self, data):
 		try:
@@ -103,23 +79,13 @@ class NumpyColumnProcessor():
 			return 0
 
 	def startDate(self, data):
-		try:
-			return None
-		except:
-			return None
+		return None
 
 	def endDate(self, data):
-		try:
-			return None
-		except:
-			return None
+		return None
 
 	def lifeSpan(self, data):
-		pass
-		try:
-			return datetime.datetime(np.max(data)) - datetime.datetime(np.min(data))
-		except:
-			return None
+		return None
 
 	def doOperations(self):
 		operations = [
@@ -151,6 +117,5 @@ class NumpyColumnProcessor():
 
 			except Exception as ex:
 				retdict[operation['name']] = None
-				print(ex)
 
 		return retdict
