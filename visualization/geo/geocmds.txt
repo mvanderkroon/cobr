@@ -1,0 +1,5 @@
+ogr2ogr -f "ESRI Shapefile" wgs84.shp 2015-Gemeentegrenzen-ookwater.shp -s_srs EPSG:28992 -t_srs EPSG:4326
+
+ogr2ogr -f "GeoJSON" -lco COORDINATE_PRECISION=6 wgs84.geojson wgs84.shp
+
+mapshaper to reduce coordinate 'resolution'

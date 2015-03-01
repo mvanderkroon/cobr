@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+    #map {
+        height: 870px;
+    }
+    </style>
+    <title></title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script>
+    var _cscale = d3.scale.sqrt().range(['yellow', 'red']);
+    var _map = L.map('map').setView([52.3167, 5.55], 7);
+
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            maxZoom: 18
+        }).addTo(_map);
+
+    var chloropleth = function() {
+        var dpath = 'chloropleth_cbs_data.csv';
+        var gpath = 'chloropleth_geojson_ned.json';
+
+        var dsv = d3.dsv(";", "text/plain");
+        dsv(dpath, function(data) {
+            var lookup = {};
+
+            // populating the lookup hashtable, this allows us to quickly
+            // determine which value belongs to which area later on
+            for (var j in data) {
+                var area = data[j]['area'];
+                var value = data[j]['value'];
+                lookup[area] = value;
+            };
+
+            // getting the min and max value for our dataset and setting
+            // the D3 color scale domain to these values
+            var ex = d3.extent(data, function(d) {
+                return +d['value'];
+            });
+
+            _cscale.domain([ex[0], ex[1]]);
+
+            function style(feature) {
+
+                var c = 'white';
+                if (feature.properties['value']) {
+                    c = _cscale(feature.properties['value']);
+                };
+
+                return {
+                    fillColor: c,
+                    weight: 1,
+                    opacity: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.6
+                };
+            }
+
+            d3.json(gpath, function(geojson) {
+                // setting the value for each GeoJson feature (area) by
+                // using the quick lookup hashtable populated above
+                for (var i in geojson.features) {
+                    var area = geojson.features[i].properties;
+                    area['value'] = lookup[area["OMSCHRIJVI"]];
+                };
+
+                var _regionPolygon = L.geoJson(geojson, {
+                    style: style,
+                    onEachFeature: function(feature, layer) {
+                        var tooltip = "" + feature.properties.OMSCHRIJVI;
+                        tooltip += "<br/>";
+                        tooltip += 'value' + ": " + feature.properties['value'];
+                        layer.bindPopup(tooltip);
+                    }
+                }).addTo(_map);
+            });
+        });
+    }
+
+    var ch = chloropleth();
+    </script>
+</body>
+
+</html>
