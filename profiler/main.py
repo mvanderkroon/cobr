@@ -43,7 +43,7 @@ def main(args):
         columns = columns, \
         columnprocessor = NumpyColumnProcessor,
         mapper = columnmapper)
-    pcolumns = cp.execute(processes=32, verbose=True)
+    pcolumns = cp.execute(processes=1, verbose=True)
 
     cets = datetime.datetime.now()
     Notifier.notify(title='cobr.io ds-toolkit',
@@ -53,7 +53,7 @@ def main(args):
     print('')
     print('## processing tables...')
     tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
-    ptables = tp.execute(processes=32, verbose=True)
+    ptables = tp.execute(processes=1, verbose=True)
 
     Notifier.notify(title='cobr.io ds-toolkit',
         subtitle='MPTableProcessor done!',

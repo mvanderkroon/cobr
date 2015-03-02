@@ -1,4 +1,4 @@
-import datetime, math, sys, argparse, os
+import datetime, math, sys, argparse, os, dill
 sys.path.append("../util")
 
 from osxnotifications import Notifier
@@ -18,9 +18,12 @@ from NumpyColumnProcessor import NumpyColumnProcessor
 
 from sqlalchemy.pool import NullPool
 
+from pympler import muppy
+from pympler import summary
+
 class MPColumnProcessor():
 
-    def __init__(self, connection_string, columns, columnprocessor, mapper):
+    def __init__(self, connection_string, columns, columnprocessor, mapper=None):
         self.connection_string = connection_string
         self.columns = columns
         self.columnprocessor = columnprocessor
@@ -36,10 +39,10 @@ class MPColumnProcessor():
             result.append(_)
 
             if verbose:
-                sys.stdout.write("\033[1A")
+                # sys.stdout.write("\033[1A")
                 totalprogress = "\r\033[K## progress {0}/{1}: {2:.2f}% \n".format(i+1, len(self.columns), round(i/(len(self.columns)-1)*100,2))
                 sys.stdout.write(totalprogress)
-                sys.stdout.flush()
+                # sys.stdout.flush()
 
         pool.close()
         return result
@@ -55,14 +58,20 @@ class MPColumnProcessor():
             values = [d[0] for d in result.fetchall()]
 
             conn.close()
-            cp = self.columnprocessor(values)
+            # cp = self.columnprocessor(values)
 
-            return self.mapper.single(column, cp.doOperations())
+            # return self.mapper.single(column, cp.doOperations())
+            return (column, {})
         except Exception as ex:
             conn.close()
             print(ex)
         finally:
             conn.close()
+            del values
+            del result
+            del s
+            del engine
+            del conn
 
 
 if __name__ == "__main__":
@@ -76,11 +85,14 @@ if __name__ == "__main__":
     processor = MPColumnProcessor(connection_string = args.src, \
         columns = mm.columns(), \
         columnprocessor = NumpyColumnProcessor)
-    result = processor.execute(processes=32, verbose=True)
-
+    result = processor.execute(processes=1, verbose=True)
     duration = datetime.datetime.now() - sts
 
     print('number of processed columns: ' + str(len(result)))
 
     # Calling the notification function
     Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPColumnProcessor done!', message='processed: ' + str(len(result)) + ' columns in ' + str(math.floor(duration.total_seconds())) + ' seconds')
+
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
