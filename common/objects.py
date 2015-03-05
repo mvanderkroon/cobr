@@ -62,7 +62,7 @@ validators = {
 def configure_listener(class_, key, inst):
 	if not hasattr(inst.property, 'columns'):
 		return
-	# this event is called whenever a "set" 
+	# this event is called whenever a "set"
 	# occurs on that instrumented attribute
 	@event.listens_for(inst, "set", retval=True)
 	def set_(instance, value, oldvalue, initiator):
@@ -147,10 +147,6 @@ class Table(Base):
 	num_implicit_inlinks = Column(Integer)
 	num_emptycolumns = Column(Integer)
 	tablefillscore = Column(Float)
-	muts_per_day = Column(Float) # TBD: FB specific
-	lifetime_in_days = Column(Integer) # TBD: FB specific
-	first_modified = Column(DateTime) # TBD: FB specific
-	last_modified = Column(DateTime) # TBD: FB specific
 	comment = Column(String(2048))
 	tags = Column(String(2048))
 	date_added = Column(DateTime)
@@ -180,7 +176,7 @@ class Column(Base):
 	datatype = Column(String(512))
 	num_nulls = Column(Integer)
 	num_distinct_values = Column(Integer)
-	
+
 	# NUMERIC
 	min = Column(Float)
 	max = Column(Float)
