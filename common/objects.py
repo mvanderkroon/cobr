@@ -9,7 +9,7 @@ Base = declarative_base()
 multistring_separator = '|' # used to combine multi column keys in fields
 
 def validate_float(value):
-	if isinstance(value, float):
+	if isinstance(value, float) or isinstance(value, int):
 		if math.isnan(value):
 			value = None
 	elif value is None:

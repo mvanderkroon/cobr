@@ -1,60 +1,91 @@
-import sys
-sys.path.append("../common")
-sys.path.append("../api")
-sys.path.append("Processors")
-sys.path.append("Miners")
+import sys, datetime, argparse, math
+sys.path.append("../util")
 
-from MetaMiner import MetaMiner
-
-from ColumnProcessor import ColumnProcessor
+from osxnotifications import Notifier
+from MetaModel import MetaModel
+from MPColumnProcessor import MPColumnProcessor
+from MPTableProcessor import MPTableProcessor
 from NumpyColumnProcessor import NumpyColumnProcessor
+from Mapper import TableMapper, ColumnMapper, PrimaryKeyMapper, ForeignKeyMapper
 
-from PostProcessor import PostProcessor
-from SimplePostProcessor import SimplePostProcessor
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from TableProcessor import TableProcessor
+def main(args):
+    sts = datetime.datetime.now()
 
-import metaclient
+    miner = MetaModel(args.src)
 
-import datetime
-import configparser
-config = configparser.ConfigParser()
-config.read('config.ini')
-if len(config.sections()) == 0:
-	print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-	quit()
+    columnmapper = ColumnMapper()
+    tablemapper = TableMapper()
+    pkmapper = PrimaryKeyMapper()
+    fkmapper = ForeignKeyMapper()
 
-def main():
-	sts = datetime.datetime.now()
+    columns = miner.columns()
+    tables = miner.tables()
+    fks = miner.foreignKeys()
+    pks = miner.primaryKeys()
 
-	miner = MetaMiner(type='pymysql').getInstance(db_catalog=config['subjectdb']['db_catalog'], db_host=config['subjectdb']['db_host'], db_user=config['subjectdb']['db_user'], db_password=config['subjectdb']['db_password'])
-	writer = metaclient.writer(config['metadb']['connection_string'])
+    print('## cols: ' + str(len(columns)))
+    print('## tables: ' + str(len(tables)))
+    print('## fks: ' + str(len(fks)))
+    print('## pks: ' + str(len(pks)))
 
-	columns = miner.getColumns()
-	tables = miner.getTables()
-	fks = miner.getForeignKeys()
-	pks = miner.getPrimaryKeys()
+    print('')
+    print('## processing columns...')
+    cp = MPColumnProcessor(connection_string = args.src,
+        columns = columns, \
+        columnprocessor = NumpyColumnProcessor,
+        mapper = columnmapper)
+    pcolumns = cp.execute(processes=32, verbose=True)
 
-	print('cols: ' + str(len(columns)))
-	print('tables: ' + str(len(tables)))
-	print('fks: ' + str(len(fks)))
-	print('pks: ' + str(len(pks)))
+    cets = datetime.datetime.now()
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='MPColumnProcessor done!',
+        message='processed: ' + str(len(pcolumns)) + ' columns in ' + str(math.floor((cets - sts).total_seconds())) + ' seconds')
 
-	# TBD: load all columns/tables at this point, then incrementally merge() as below operations become done
+    print('')
+    print('## processing tables...')
+    tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
+    ptables = tp.execute(processes=32, verbose=True)
 
-	ColumnProcessor(columns=columns, getDataFn=miner.getDataForColumn, processor=NumpyColumnProcessor).execute()
-	PostProcessor(tables=tables, columns=columns, explicit_primarykeys=pks, explicit_foreignkeys=fks, processor=SimplePostProcessor)
-	TableProcessor(tables=tables, processor=miner).execute()
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='MPTableProcessor done!',
+        message='processed: ' + str(len(ptables)) + ' tables in ' + str(math.floor((datetime.datetime.now() - cets).total_seconds())) + ' seconds')
 
-	# writer.reset() # dropping the database tables and recreating them
+    if not args.dry_run:
+        engine = create_engine(args.target)
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
-	writer.writeTables(tables)
-	writer.writeColumns(columns)
-	writer.writePrimaryKeys(pks)
-	writer.writeForeignKeys(fks)
-	writer.close()
+        writeToDb(session, ptables)
+        writeToDb(session, pcolumns)
+        writeToDb(session, ppks)
+        writeToDb(session, pfks)
 
-	print('time elapsed: ' + str(datetime.datetime.now() - sts))
+    print('')
+    print('## time elapsed: ' + str(datetime.datetime.now() - sts))
+
+    Notifier.notify(title='cobr.io ds-toolkit',
+        subtitle='Profiling done!',
+        message='duration: ' + str(math.floor((datetime.datetime.now() - sts).total_seconds())) + ' seconds')
+
+def writeToDb(session, objects):
+    try:
+        for obj in objects:
+            session.add(obj)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 if __name__ == '__main__':
-	main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
+    parser.add_argument("-t", "--target", help="connection_string for the target-database", metavar="string")
+    parser.add_argument("-d", "--dry_run", help="flag to make a dry-run without storing the result to target database", action='store_true', default=False)
+    args = parser.parse_args()
+
+    main(args)
