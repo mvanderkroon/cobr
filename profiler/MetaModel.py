@@ -56,11 +56,20 @@ class MetaModel():
 
                 # getting all primary keys
                 for tablename in tablenames:
-                    self._pks.extend(insp.get_pk_constraint(table_name=tablename, schema=schemaname))
+                    pk = insp.get_pk_constraint(table_name=tablename, schema=schemaname)
+                    pk['tablename'] = tablename
+                    pk['schemaname'] = schemaname
+                    pk['db_catalog'] = self.db_catalog()
+                    self._pks.append(pk)
 
                 # getting all foreign keys
                 for tablename in tablenames:
-                    self._fks.extend(insp.get_foreign_keys(table_name=tablename, schema=schemaname))
+                    fks = insp.get_foreign_keys(table_name=tablename, schema=schemaname)
+                    for fk in fks:
+                        fk['srctable'] = tablename
+                        fk['srcschema'] = schemaname
+                        fk['db_catalog'] = self.db_catalog()
+                    self._fks.extend(fks)
 
                 # getting all tables
                 for tablename in tablenames:

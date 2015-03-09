@@ -39,10 +39,10 @@ class MPColumnProcessor():
             result.append(_)
 
             if verbose:
-                # sys.stdout.write("\033[1A")
+                sys.stdout.write("\033[1A")
                 totalprogress = "\r\033[K## progress {0}/{1}: {2:.2f}% \n".format(i+1, len(self.columns), round(i/(len(self.columns)-1)*100,2))
                 sys.stdout.write(totalprogress)
-                # sys.stdout.flush()
+                sys.stdout.flush()
 
         pool.close()
         return result
@@ -58,10 +58,9 @@ class MPColumnProcessor():
             values = [d[0] for d in result.fetchall()]
 
             conn.close()
-            # cp = self.columnprocessor(values)
+            cp = self.columnprocessor(values)
 
-            # return self.mapper.single(column, cp.doOperations())
-            return (column, {})
+            return self.mapper.single(column, cp.doOperations())
         except Exception as ex:
             conn.close()
             print(ex)

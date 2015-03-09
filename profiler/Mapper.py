@@ -7,7 +7,7 @@ class TableMapper():
     def __init__(self):
         pass
 
-    def single(self, table, statistics):
+    def single(self, table, statistics=None):
         obj = Table()
         obj.db_catalog = table.info['db_catalog']
         obj.schema = table.info['schemaname']
@@ -19,16 +19,16 @@ class TableMapper():
         return obj
 
     def multiple(self, lst):
-        retval = []
-        for tup in lst:
-            retval.append(self.single(tup[0], tup[1]))
+        retval = retval = [self.single(tup[0], tup[1]) for tup in lst]
+        # for tup in lst:
+        #     retval.append(self.single(tup[0], tup[1]))
         return retval
 
 class ColumnMapper():
     def __init__(self):
         pass
 
-    def single(self, column, statistics):
+    def single(self, column, statistics=None):
         obj = Column()
         obj.db_catalog = column.info['db_catalog']
         obj.schema = column.info['schemaname']
@@ -55,22 +55,22 @@ class ColumnMapper():
         return obj
 
     def multiple(self, lst):
-        retval = []
-        for tup in lst:
-            retval.append(self.single(tup[0], tup[1]))
+        retval = [self.single(tup[0], tup[1]) for tup in lst]
+        # for tup in lst:
+        #     retval.append(self.single(tup[0], tup[1]))
         return retval
 
 class PrimaryKeyMapper():
     def __init__(self):
         pass
 
-    def single(self, pk, statistics):
+    def single(self, pk, statistics=None):
         obj = PrimaryKey()
-        obj.db_catalog = self.db_catalog
-        obj.schema = pk.table.metadata.schema
-        obj.tablename = pk.table.name
-        obj.db_columns = ''
-        obj.keyname = ''
+        obj.db_catalog = pk['db_catalog']
+        obj.schema = pk['schemaname']
+        obj.tablename = pk['tablename']
+        obj.db_columns = '|'.join(pk['constrained_columns'])
+        obj.keyname = pk['name']
         obj.type = 'EXPLICIT'
         obj.score = 1.0
         obj.comment = ''
@@ -79,25 +79,23 @@ class PrimaryKeyMapper():
         return obj
 
     def multiple(self, lst):
-        retval = []
-        for tup in lst:
-            retval.append(self.single(tup[0], tup[1]))
+        retval = [self.single(item) for item in lst]
         return retval
 
 class ForeignKeyMapper():
     def __init__(self):
         pass
 
-    def single(self, fk, statistics):
+    def single(self, fk, statistics=None):
         obj = ForeignKey()
-        obj.db_catalog = self.db_catalog
-        obj.pkdb_schema = fk.table.metadata.schema
-        obj.fkdb_schema = fk.table.metadata.schema
-        obj.pktablename = fk.table.name
-        obj.fktablename = fk.table.name
-        obj.pk_columns = ''
-        obj.fk_columns = ''
-        obj.keyname = ''
+        obj.db_catalog = fk['db_catalog']
+        obj.pkdb_schema = fk['srcschema']
+        obj.fkdb_schema = fk['referred_schema']
+        obj.pktablename = fk['srcschema']
+        obj.fktablename = fk['referred_table']
+        obj.pk_columns = '|'.join(fk['constrained_columns'])
+        obj.fk_columns = '|'.join(fk['referred_columns'])
+        obj.keyname = fk['name']
         obj.type = 'EXPLICIT'
         obj.score = 1.0
         obj.comment = ''
@@ -106,7 +104,5 @@ class ForeignKeyMapper():
         return obj
 
     def multiple(self, lst):
-        retval = []
-        for tup in lst:
-            retval.append(self.single(tup[0], tup[1]))
+        retval = [self.single(item) for item in lst]
         return retval

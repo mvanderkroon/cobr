@@ -26,12 +26,6 @@ def main(args):
     fks = miner.foreignKeys()
     pks = miner.primaryKeys()
 
-    # print(miner.schemas())
-    # exit()
-
-    # for column in columns:
-    #     print(column)
-    # exit()
     print('## cols: ' + str(len(columns)))
     print('## tables: ' + str(len(tables)))
     print('## fks: ' + str(len(fks)))
@@ -43,7 +37,7 @@ def main(args):
         columns = columns, \
         columnprocessor = NumpyColumnProcessor,
         mapper = columnmapper)
-    pcolumns = cp.execute(processes=1, verbose=True)
+    pcolumns = cp.execute(processes=32, verbose=True)
 
     cets = datetime.datetime.now()
     Notifier.notify(title='cobr.io ds-toolkit',
@@ -53,13 +47,12 @@ def main(args):
     print('')
     print('## processing tables...')
     tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
-    ptables = tp.execute(processes=1, verbose=True)
+    ptables = tp.execute(processes=32, verbose=True)
 
     Notifier.notify(title='cobr.io ds-toolkit',
         subtitle='MPTableProcessor done!',
         message='processed: ' + str(len(ptables)) + ' tables in ' + str(math.floor((datetime.datetime.now() - cets).total_seconds())) + ' seconds')
-    # ppks = pkmapper.multiple(pks)
-    # pfks = fkmapper.multiple(fks)
+
 
     if not args.dry_run:
         engine = create_engine(args.target)
