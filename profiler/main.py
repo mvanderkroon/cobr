@@ -53,7 +53,6 @@ def main(args):
         subtitle='MPTableProcessor done!',
         message='processed: ' + str(len(ptables)) + ' tables in ' + str(math.floor((datetime.datetime.now() - cets).total_seconds())) + ' seconds')
 
-
     if not args.dry_run:
         engine = create_engine(args.target)
         Session = sessionmaker(bind=engine)
@@ -61,8 +60,8 @@ def main(args):
 
         writeToDb(session, ptables)
         writeToDb(session, pcolumns)
-        # writeToDb(session, ppks)
-        # writeToDb(session, pfks)
+        writeToDb(session, ppks)
+        writeToDb(session, pfks)
 
     print('')
     print('## time elapsed: ' + str(datetime.datetime.now() - sts))

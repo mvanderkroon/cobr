@@ -1,8 +1,9 @@
-import sys
-sys.path.append("../common")
+from tornado.wsgi import WSGIContainer
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
 
-import csv
-import io
+import sys, csv, io, argparse, ConfigParser, unicodecsv
+sys.path.append("../common")
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
@@ -14,36 +15,9 @@ from flask import Response
 from flask_cors import CORS
 from flask.ext.compress import Compress
 
-import ConfigParser
-import unicodecsv
-
-config = ConfigParser.ConfigParser()
-config.read('config.ini')
-if len(config.sections()) == 0:
-    print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-    quit()
-
-engine = create_engine(config.get('DATAAPI', 'connection_string'), pool_size=3, pool_recycle=3600)
-insp = reflection.Inspector.from_engine(engine)
-
 app = Flask(__name__)
 cors = CORS(app)
 Compress(app)
-
-def sql2csv(name, delimiter, quotechar):
-    connection = engine.connect()
-    rows = connection.execute("SELECT * FROM " + name).fetchall()
-    connection.close()
-
-    output = io.BytesIO()
-    writer = unicodecsv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL, encoding='utf-8')
-
-    # write header
-    writer.writerow([c['name'] for c in insp.get_columns(name)])
-
-    for row in rows:
-        writer.writerow(row)
-    return output.getvalue()
 
 @app.route('/primarykey')
 def listprimarykeys():
@@ -97,5 +71,47 @@ def tabledata(tablename):
     else:
         return "Not a valid tablename"
 
-if __name__ == "__main__":
-    app.run()
+def sql2csv(name, delimiter, quotechar):
+    output = io.BytesIO()
+    writer = unicodecsv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL, encoding='utf-8')
+
+    connection = engine.connect()
+    res = connection.execute("SELECT * FROM " + name)
+
+    # write header
+    writer.writerow([c['name'] for c in insp.get_columns(name)])
+
+    while True:
+        row = res.fetchone()
+        if row is None:
+            break
+        writer.writerow(row)
+    connection.close()
+
+    return output.getvalue()
+
+engine = None
+insp = None
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--src", help="force connection_string for the subject-database, defaults to connection_string in config.ini", metavar="string", default=None)
+    parser.add_argument("-p", "--port", help="port for the API to be exposed on, defaults to 5001", metavar="int", default=5001)
+    args = parser.parse_args()
+
+    connection_string = args.src
+    if connection_string is None:
+        config = ConfigParser.ConfigParser()
+        config.read('config.ini')
+        if len(config.sections()) == 0:
+            print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
+            quit()
+
+        connection_string = config.get('DATAAPI', 'connection_string')
+
+    engine = create_engine(connection_string, pool_size=3, pool_recycle=3600)
+    insp = reflection.Inspector.from_engine(engine)
+
+    http_server = HTTPServer(WSGIContainer(app))
+    http_server.listen(args.port)
+    IOLoop.instance().start()
