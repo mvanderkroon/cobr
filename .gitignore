@@ -2,6 +2,7 @@ data/
 smpl_data/
 __pycache__/
 
+*.csv
 .DS_store
 *.swp
 *.pyc
