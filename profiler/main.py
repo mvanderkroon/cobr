@@ -1,5 +1,7 @@
-import sys, datetime, argparse, math
+import sys, datetime, argparse, math, warnings
 sys.path.append("../util")
+
+from sqlalchemy import exc as sa_exc
 
 from osxnotifications import Notifier
 from MetaModel import MetaModel
@@ -10,6 +12,7 @@ from Mapper import TableMapper, ColumnMapper, PrimaryKeyMapper, ForeignKeyMapper
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 
 def main(args):
     sts = datetime.datetime.now()
@@ -37,7 +40,7 @@ def main(args):
         columns = columns, \
         columnprocessor = NumpyColumnProcessor,
         mapper = columnmapper)
-    pcolumns = cp.execute(processes=32, verbose=True)
+    pcolumns = cp.execute(processes=2, verbose=True)
 
     cets = datetime.datetime.now()
     Notifier.notify(title='cobr.io ds-toolkit',
@@ -47,7 +50,7 @@ def main(args):
     print('')
     print('## processing tables...')
     tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
-    ptables = tp.execute(processes=32, verbose=True)
+    ptables = tp.execute(processes=2, verbose=True)
 
     Notifier.notify(title='cobr.io ds-toolkit',
         subtitle='MPTableProcessor done!',
@@ -88,4 +91,7 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dry_run", help="flag to make a dry-run without storing the result to target database", action='store_true', default=False)
     args = parser.parse_args()
 
+    # currently we catch and ignore all warnings, which is a bit extreme; probably we should output these warning to a log file
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
     main(args)

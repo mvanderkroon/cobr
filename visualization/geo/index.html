@@ -2,92 +2,157 @@
 <html>
 
 <head>
+    <title></title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+
     <style>
     #map {
         height: 870px;
     }
+    .row {
+        padding: 10px;
+        background-color: white;
+    }
     </style>
-    <title></title>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
 </head>
 
 <body>
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="form-horizontal" role="form">
+
+                    <div class="form-group">
+                        <label for="selectData" class="col-sm-4 control-label">Data:</label>
+                        <div class="col-sm-6">
+                            <select class="form-control" id="selectData" name="selectData" onchange="doChloropleth($('#selectData').val());">
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+
+                        </div>
+                        <!-- <label for="inputQuery" class="col-sm-4 control-label">Content query:</label>
+                        <div class="col-sm-8">
+                            <input type="search" class="form-control" id="ecQuery" placeholder="Query" onkeyup="handleEsQ();">
+                        </div> -->
+                    </div>
+                    <div class="form-group">
+
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
     <div id="map"></div>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script>
-    var _cscale = d3.scale.linear().range(['yellow', 'red']);
+
+    var _ignored_properties = ['gwb_code_10', 'gwb_code_8', 'regio', 'gm_naam', 'recs', 'gwb_code'];
+    var _colorscales = {};
+    var _geojsonLayer;
+    var _geojson = {};
+    var _datadict = {};
+
     var _map = L.map('map').setView([52.3167, 5.55], 7);
 
     L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-            maxZoom: 18
-        }).addTo(_map);
+        attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+        maxZoom: 18
+    }).addTo(_map);
 
-    var chloropleth = function() {
-        var dpath = 'http://127.0.0.1:5001/view/cbs_buurt_chloro';
-        var gpath = 'buurten_cbs.json';
+    var doChloropleth = function(selectedProp) {
 
-        // var dsv = d3.dsv(";", "text/plain");
-        d3.csv(dpath, function(data) {
-            var lookup = {};
+        var style = function(feature) {
+            var featureId = feature.properties["BU_CODE"];
 
-            // populating the lookup hashtable, this allows us to quickly
-            // determine which value belongs to which area later on
-            for (var j in data) {
-                var area = data[j]['id'];
-                var value = data[j]['value'];
-                lookup[area] = value;
-            };
-
-            // getting the min and max value for our dataset and setting
-            // the D3 color scale domain to these values
-            var ex = d3.extent(data, function(d) {
-                return +d['value'];
-            });
-
-            _cscale.domain([ex[0], ex[1]]);
-
-            function style(feature) {
-
-                var c = 'white';
-                if (feature.properties['value']) {
-                    c = _cscale(feature.properties['value']);
-                };
-
-                return {
-                    fillColor: c,
-                    weight: 1,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.6
-                };
+            var c = 'white';
+            if (_datadict[featureId] && _datadict[featureId][selectedProp]) {
+                c = _colorscales[selectedProp](_datadict[featureId][selectedProp])
             }
 
-            d3.json(gpath, function(geojson) {
-                // setting the value for each GeoJson feature (area) by
-                // using the quick lookup hashtable populated above
-                for (var i in geojson.features) {
-                    var area = geojson.features[i].properties;
-                    area['value'] = lookup[area["BU_CODE"]];
-                };
+            return {
+                fillColor: c,
+                stroke: 0,
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '2',
+                fillOpacity: 0.6
+            };
+        };
 
-                var _regionPolygon = L.geoJson(geojson, {
-                    style: style,
-                    onEachFeature: function(feature, layer) {
-                        var tooltip = "" + feature.properties["BU_CODE"];
-                        tooltip += "<br/>";
-                        tooltip += 'value' + ": " + feature.properties['value'];
-                        layer.bindPopup(tooltip);
-                    }
-                }).addTo(_map);
-            });
+        if (_geojsonLayer) {
+            console.log('removing geojson layer');
+            _map.removeLayer(_geojsonLayer);
+        }
+
+        _geojsonLayer = L.geoJson(_geojson, {
+            style: style,
+            onEachFeature: function(feature, layer) {
+                var featureName = feature.properties["BU_NAAM"];
+                var featureId = feature.properties["BU_CODE"];
+
+                var value = 'NULL';
+                if (_datadict[featureId] && _datadict[featureId][selectedProp]) {
+                    value = _datadict[featureId][selectedProp]
+                }
+
+                var tooltip = "" + featureName;
+                tooltip += "<br/>";
+                tooltip += "" + featureId;
+                tooltip += "<br/>";
+                tooltip += selectedProp + ": " + value;
+                layer.bindPopup(tooltip);
+            }
         });
-    }
 
-    var ch = chloropleth();
+        _geojsonLayer.addTo(_map);
+    };
+
+    d3.json('cbs_nederland_buurt.json', function(geojson) {
+        _geojson = geojson;
+
+        var dsv = d3.dsv(";", "text/plain");
+        d3.csv('http://127.0.0.1:5001/view/buurten', function(data) {
+            var headers = Object.keys(data[0]);
+            headers = _.difference(headers, _ignored_properties);
+
+            // populate the html select
+            $.each(headers, function(idx, val) {
+                $('#selectData').append("<option value='" + val + "'> " + val + " </option>");
+            });
+
+            for (var i in data) {
+                var id = data[i]['gwb_code'];
+                _datadict[id] = data[i];
+            };
+
+            // populate the colorscales for each variable
+            for (var i in headers) {
+                var key = headers[i];
+
+                var ex = d3.extent(data, function(d) {
+                    return +d[key];
+                });
+
+                _colorscales[key] = d3.scale.linear().range(['yellow', 'red']).domain([ex[0], ex[1]]);
+            };
+
+            doChloropleth(headers[0]);
+        });
+    });
     </script>
 </body>
 

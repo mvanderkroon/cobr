@@ -2,7 +2,7 @@ from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
-import sys, csv, io, argparse, ConfigParser, unicodecsv
+import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO
 sys.path.append("../common")
 
 from sqlalchemy import create_engine
@@ -15,29 +15,31 @@ from flask import Response
 from flask_cors import CORS
 from flask.ext.compress import Compress
 
+from messytables import CSVTableSet, type_guess, types_processor, headers_guess, headers_processor, offset_processor, any_tableset
+
 app = Flask(__name__)
 cors = CORS(app)
 Compress(app)
 
-@app.route('/primarykey')
+@app.route('/primarykey', methods=['GET'])
 def listprimarykeys():
     pks = []
     for tablename in insp.get_table_names():
         pks.append(insp.get_primary_keys(tablename))
     return str(pks)
 
-@app.route('/foreignkey')
+@app.route('/foreignkey', methods=['GET'])
 def listforeignkeys():
     fks = []
     for tablename in insp.get_table_names():
         fks.append(insp.get_foreign_keys(tablename))
     return str(fks)
 
-@app.route('/view')
+@app.route('/view', methods=['GET'])
 def listviews():
     return str(insp.get_view_names())
 
-@app.route('/view/<viewname>')
+@app.route('/view/<viewname>', methods=['GET'])
 def viewdata(viewname):
     if viewname in insp.get_view_names():
         delimiter = ','
@@ -52,12 +54,21 @@ def viewdata(viewname):
     else:
         return "Not a valid viewname"
 
-@app.route('/table')
+@app.route('/table', methods=['GET'])
 def listtables():
     return str(insp.get_table_names())
 
-@app.route('/table/<tablename>')
+@app.route('/table/<tablename>', methods=['GET', 'POST'])
 def tabledata(tablename):
+    if request.method == 'POST':
+        # fire requests like this:
+        # curl -X POST --data-urlencode "csv@/Users/matthijs/Desktop/data.csv" 10.1.1.118:5001/table/testdata
+        f = StringIO.StringIO(request.form['csv'].encode('utf8'))
+        reader = unicodecsv.reader(f, encoding='utf-8')
+        for row in reader:
+            print(row)
+        return 'Experimental Feature...'
+
     if tablename in insp.get_table_names():
         delimiter = ','
         if request.args.get('delimiter') is not None:
