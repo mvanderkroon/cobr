@@ -15,7 +15,10 @@ from flask import Response
 from flask_cors import CORS
 from flask.ext.compress import Compress
 
-from messytables import CSVTableSet, type_guess, types_processor, headers_guess, headers_processor, offset_processor, any_tableset
+from csvkit import sql
+from csvkit import table
+from csvkit import CSVKitWriter
+from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -62,11 +65,44 @@ def listtables():
 def tabledata(tablename):
     if request.method == 'POST':
         # fire requests like this:
-        # curl -X POST --data-urlencode "csv@/Users/matthijs/Desktop/data.csv" 10.1.1.118:5001/table/testdata
-        f = StringIO.StringIO(request.form['csv'].encode('utf8'))
-        reader = unicodecsv.reader(f, encoding='utf-8')
-        for row in reader:
-            print(row)
+        # curl -X POST --data-urlencode "csv@/Users/matthijs/Desktop/data.csv" 127.0.0.1:5001/table/testdata
+        try:
+            f = StringIO.StringIO(request.form['csv'].encode('utf8'))
+
+            conn = engine.connect()
+            trans = conn.begin()
+
+            csv_table = table.Table.from_csv(
+                f,
+                name=tablename,
+                snifflimit=False,
+                blanks_as_nulls=True,
+                infer_types=True,
+                no_header_row=False
+            )
+
+            f.close()
+
+            if connection_string:
+                sql_table = sql.make_table(
+                    csv_table,
+                    tablename,
+                    False, #self.args.no_constraints
+                    'test_db', #self.args.db_schema
+                    metadata
+                )
+
+            sql_table.create()
+
+            insert = sql_table.insert()
+            headers = csv_table.headers()
+            conn.execute(insert, [dict(zip(headers, row)) for row in csv_table.to_rows()])
+        except Exception as e:
+            print(e)
+        finally:
+            trans.commit()
+            conn.close()
+            f.close()
         return 'Experimental Feature...'
 
     if tablename in insp.get_table_names():
@@ -120,7 +156,8 @@ if __name__ == '__main__':
 
         connection_string = config.get('DATAAPI', 'connection_string')
 
-    engine = create_engine(connection_string, pool_size=3, pool_recycle=3600)
+    # engine = create_engine(connection_string, pool_size=3, pool_recycle=3600)
+    engine, metadata = sql.get_connection(connection_string)
     insp = reflection.Inspector.from_engine(engine)
 
     http_server = HTTPServer(WSGIContainer(app))
