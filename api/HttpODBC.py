@@ -2,7 +2,7 @@ from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
-import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO
+import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO, json
 sys.path.append("../common")
 
 from sqlalchemy import create_engine
@@ -21,29 +21,28 @@ from csvkit import CSVKitWriter
 from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
+# app.config['MAX_CONTENT_LENGTH'] = 4000 * 1024 * 1024
 cors = CORS(app)
 Compress(app)
 
 @app.route('/primarykey', methods=['GET'])
 def listprimarykeys():
-    pks = []
-    for tablename in insp.get_table_names():
-        pks.append(insp.get_primary_keys(tablename))
-    return str(pks)
+    insp = reflection.Inspector.from_engine(engine)
+    return json.dumps([insp.get_primary_keys(tablename) for tablename in insp.get_table_names() if len(insp.get_primary_keys(tablename)) > 0])
 
 @app.route('/foreignkey', methods=['GET'])
 def listforeignkeys():
-    fks = []
-    for tablename in insp.get_table_names():
-        fks.append(insp.get_foreign_keys(tablename))
-    return str(fks)
+    insp = reflection.Inspector.from_engine(engine)
+    return json.dumps([insp.get_foreign_keys(tablename) for tablename in insp.get_table_names() if len(insp.get_foreign_keys(tablename)) > 0])
 
 @app.route('/view', methods=['GET'])
 def listviews():
-    return str(insp.get_view_names())
+    insp = reflection.Inspector.from_engine(engine)
+    return json.dumps(insp.get_view_names())
 
 @app.route('/view/<viewname>', methods=['GET'])
 def viewdata(viewname):
+    insp = reflection.Inspector.from_engine(engine)
     if viewname in insp.get_view_names():
         delimiter = ','
         if request.args.get('delimiter') is not None:
@@ -59,31 +58,37 @@ def viewdata(viewname):
 
 @app.route('/table', methods=['GET'])
 def listtables():
-    return str(insp.get_table_names())
+    insp = reflection.Inspector.from_engine(engine)
+    return json.dumps(insp.get_table_names())
 
 @app.route('/table/<tablename>', methods=['GET', 'POST'])
 def tabledata(tablename):
+    insp = reflection.Inspector.from_engine(engine)
+
+    def allowed_file(filename):
+        return '.' in filename and \
+               filename.rsplit('.', 1)[1] in ALLOWED_UPLOAD_EXTENSIONS
+
     if request.method == 'POST':
         # fire requests like this:
-        # curl -X POST --data-urlencode "csv@/Users/matthijs/Desktop/data.csv" 127.0.0.1:5001/table/testdata
-        try:
-            f = StringIO.StringIO(request.form['csv'].encode('utf8'))
+        # curl -v -i -X POST -H "Content-Type: multipart/form-data" -F "file=@/Users/matthijs/Desktop/sdata.csv" 127.0.0.1:5001/table/testdata
 
-            conn = engine.connect()
-            trans = conn.begin()
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            try:
+                conn = engine.connect()
+                trans = conn.begin()
 
-            csv_table = table.Table.from_csv(
-                f,
-                name=tablename,
-                snifflimit=False,
-                blanks_as_nulls=True,
-                infer_types=True,
-                no_header_row=False
-            )
+                csv_table = table.Table.from_csv(
+                    file.stream,
+                    name=tablename,
+                    snifflimit=False,
+                    blanks_as_nulls=True,
+                    infer_types=True,
+                    no_header_row=False,
+                    encoding='utf-8'
+                )
 
-            f.close()
-
-            if connection_string:
                 sql_table = sql.make_table(
                     csv_table,
                     tablename,
@@ -92,33 +97,38 @@ def tabledata(tablename):
                     metadata
                 )
 
-            sql_table.create()
+                sql_table.create()
 
-            insert = sql_table.insert()
-            headers = csv_table.headers()
-            conn.execute(insert, [dict(zip(headers, row)) for row in csv_table.to_rows()])
-        except Exception as e:
-            print(e)
-        finally:
-            trans.commit()
-            conn.close()
-            f.close()
-        return 'Experimental Feature...'
+                insert = sql_table.insert()
+                headers = csv_table.headers()
 
-    if tablename in insp.get_table_names():
-        delimiter = ','
-        if request.args.get('delimiter') is not None:
-            delimiter = request.args.get('delimiter')
+                conn.execute(insert, [dict(zip(headers, row)) for row in csv_table.to_rows()])
 
-        quotechar = '"'
-        if request.args.get('quotechar') is not None:
-            quotechar = request.args.get('quotechar')
+            except Exception as e:
+                print(e)
+            finally:
+                trans.commit()
+                conn.close()
+                file.close()
+        return ''
 
-        return Response(sql2csv(tablename, delimiter, quotechar), mimetype='text/csv')
-    else:
-        return "Not a valid tablename"
+    elif request.method == 'GET':
+        if tablename in insp.get_table_names():
+            delimiter = ','
+            if request.args.get('delimiter') is not None:
+                delimiter = request.args.get('delimiter')
+
+            quotechar = '"'
+            if request.args.get('quotechar') is not None:
+                quotechar = request.args.get('quotechar')
+
+            return Response(sql2csv(tablename, delimiter, quotechar), mimetype='text/csv')
+        else:
+            return "Not a valid tablename"
 
 def sql2csv(name, delimiter, quotechar):
+    insp = reflection.Inspector.from_engine(engine)
+
     output = io.BytesIO()
     writer = unicodecsv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL, encoding='utf-8')
 
@@ -137,8 +147,7 @@ def sql2csv(name, delimiter, quotechar):
 
     return output.getvalue()
 
-engine = None
-insp = None
+ALLOWED_UPLOAD_EXTENSIONS = set(['csv'])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -156,10 +165,9 @@ if __name__ == '__main__':
 
         connection_string = config.get('DATAAPI', 'connection_string')
 
-    # engine = create_engine(connection_string, pool_size=3, pool_recycle=3600)
     engine, metadata = sql.get_connection(connection_string)
-    insp = reflection.Inspector.from_engine(engine)
 
-    http_server = HTTPServer(WSGIContainer(app))
-    http_server.listen(args.port)
+    server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024)
+    server.bind(args.port)
+    server.start(0)  # Forks multiple sub-processes
     IOLoop.instance().start()
