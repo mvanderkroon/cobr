@@ -141,7 +141,7 @@ def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', sniffli
         file.close()
         return json.dumps(tablename)
 
-def sql2csv(name, delimiter, quotechar):
+def sql2csv(name=None, delimiter=',', quotechar='"'):
     insp = reflection.Inspector.from_engine(engine)
 
     output = io.BytesIO()
@@ -153,6 +153,7 @@ def sql2csv(name, delimiter, quotechar):
     # write header
     writer.writerow([c['name'] for c in insp.get_columns(name)])
 
+    c = 0
     while True:
         row = res.fetchone()
         if row is None:
