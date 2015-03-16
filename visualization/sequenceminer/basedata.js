@@ -84,8 +84,10 @@ function basedata(config) {
 			var key = sorted[i][0];
 			var value = sorted[i][1];
 
-			if (i < colorlst.length) colors[key] = colorlst[i];
-			else colors[key] = nullcolor;
+			//if (i < colorlst.length) colors[key] = colorlst[i];
+			// else colors[key] = nullcolor;
+			colors[key] = colorlst[i%colorlst.length];
+
 		}
 
 		return colors;

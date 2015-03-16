@@ -19,31 +19,16 @@ function breadcrumb(config, context) {
 	}
 
 	// measure the width and height of text as it will be rendered on the screen
-	function measureText(pText, pFontSize, pStyle) {
-		var tmpDiv = document.createElement('tmpDiv');
 
-		$('body').append(tmpDiv)
 
-		if (pStyle != null) {
-			tmpDiv.style = pStyle;
-		}
-		tmpDiv.style.fontSize = "" + pFontSize + "px";
-		tmpDiv.style.position = "absolute";
-		tmpDiv.style.left = -1000;
-		tmpDiv.style.top = -1000;
-
-		tmpDiv.innerHTML = pText;
-
-		var lResult = {
-			width: tmpDiv.clientWidth,
-			height: tmpDiv.clientHeight
-		};
-
-		$(tmpDiv).remove();
-		tmpDiv = null;
-
-		return lResult;
-	}
+	function getTextWidth(text, font) {
+	    // re-use canvas object for better performance
+	    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+	    var context = canvas.getContext("2d");
+	    context.font = font;
+	    var metrics = context.measureText(text);
+	    return metrics.width;
+	};
 
 	function breadcrumbPoints(d, i) {
 		var points = [];
@@ -64,7 +49,7 @@ function breadcrumb(config, context) {
 
 	self.handleMouseoverNode = function(node) {
 		var ancestors = getAncestors(node)['path'];
-		
+
 		var percentage = (100 * node.value / context.basedata.tabular.length).toPrecision(3);
 		var percentageString = percentage + "%";
 		if (percentage < 0.1) {
@@ -76,13 +61,7 @@ function breadcrumb(config, context) {
 		var g = d3.select("#trail")
 			.selectAll("g")
 			.data(ancestors, function(d) {
-				var textWidth = measureText(d.name).width;
-
-				if (textWidth < 20) {
-					textWidth = 20;
-				}
-
-				d.w = textWidth + 20;
+				d.w = getTextWidth(d.name, '10pt Helvetica Neue')
 
 				return d.name + d.depth;
 			});
@@ -132,7 +111,7 @@ function breadcrumb(config, context) {
 			.attr("x", function(d, i) {
 				return _.reduce(ancestors, function(memo, obj) {
 					return memo + obj.w + config.dimensions.s;
-				}, 0) + measureText(percentageString).width + config.dimensions.s;
+				}, 0) + getTextWidth(percentageString, '10pt Helvetica Neue') + config.dimensions.s;
 			})
 			.attr("y", config.dimensions.h / 2)
 			.attr("dy", "0.35em")
