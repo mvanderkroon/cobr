@@ -4,6 +4,7 @@ sys.path.append("../common")
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+from tornado.log import enable_pretty_logging
 
 import flask
 import flask.ext.sqlalchemy
@@ -55,6 +56,8 @@ if __name__ == '__main__':
     app.config['DEBUG'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
 
-    http_server = HTTPServer(WSGIContainer(app))
-    http_server.listen(args.port)
+    enable_pretty_logging()
+    server = HTTPServer(WSGIContainer(app))
+    server.bind(args.port)
+    server.start(0)  # Forks multiple sub-processes
     IOLoop.instance().start()
