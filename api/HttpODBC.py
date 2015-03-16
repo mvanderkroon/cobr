@@ -76,9 +76,13 @@ def tabledata(tablename):
         # fire requests like this:
         # curl -v -i -X POST -H "Content-Type: multipart/form-data" -F "file=@/Users/matthijs/Desktop/data.csv" 127.0.0.1:5001/table/testdata
 
+        encoding = 'utf-8'
+        if request.args.get('encoding') is not None:
+            encoding = request.args.get('encoding')
+
         file = request.files['file']
         if file and allowed_file(file.filename):
-            return csv2sql(file, db_schema, tablename)
+            return csv2sql(file=file, db_schema=None, tablename=tablename, encoding=encoding)
 
         return "You either didn't POST a file, or the filetype isn't allowed"
 
@@ -96,7 +100,8 @@ def tabledata(tablename):
         else:
             return "Not a valid tablename"
 
-def csv2sql(file, db_schema, tablename):
+def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', snifflimit=512*1024):
+
     try:
         conn = engine.connect()
         trans = conn.begin()
@@ -104,11 +109,11 @@ def csv2sql(file, db_schema, tablename):
         csv_table = table.Table.from_csv(
             file.stream,
             name=tablename,
-            snifflimit=False,
+            snifflimit=snifflimit,
             blanks_as_nulls=True,
             infer_types=True,
             no_header_row=False,
-            encoding='utf-8'
+            encoding=encoding
         )
 
         sql_table = sql.make_table(
@@ -125,14 +130,16 @@ def csv2sql(file, db_schema, tablename):
         headers = csv_table.headers()
 
         conn.execute(insert, [dict(zip(headers, row)) for row in csv_table.to_rows()])
+        trans.commit()
 
     except Exception as e:
+        trans.rollback()
+        print(e)
         return e
     finally:
-        trans.commit()
         conn.close()
         file.close()
-        return json.dumps('.'.join([db_schema, tablename]))
+        return json.dumps(tablename)
 
 def sql2csv(name, delimiter, quotechar):
     insp = reflection.Inspector.from_engine(engine)
