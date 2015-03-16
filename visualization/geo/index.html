@@ -23,6 +23,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="config.js"></script>
 </head>
 
 <body>
@@ -107,7 +108,7 @@
         _geojson = geojson;
 
         var dsv = d3.dsv(";", "text/plain");
-        d3.csv('http://127.0.0.1:5001/view/buurten', function(data) {
+        d3.csv(apihost + '/view/buurten', function(data) {
 
             var headers = _.difference(Object.keys(data[0]), _ignored_properties);
 
