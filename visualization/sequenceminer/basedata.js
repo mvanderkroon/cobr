@@ -156,7 +156,6 @@ function basedata(config) {
 						candidate = {
 							"name": state,
 							"id": id,
-							"obj": [line],
 							"children": []
 						};
 

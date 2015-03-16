@@ -20,21 +20,21 @@ function sunburst(config, context) {
 		.append("g")
 		.attr("transform", "translate(" + containerWidth / 2 + "," + (containerHeight / 2 + 10) + ")")
 		// .on("mouseover", function(d) {
-			
+
 		// 	console.log(x.invert(d3.event.pageX));
 		// 	console.log(y.invert(d3.event.pageY));
 		// 	console.log('');
 
-			
+
 		// })
 		;
 
-	
+
 
 	var partition = d3.layout.partition()
 		.value(function(d) {
 			return d.size
-		});		
+		});
 
 	var arc = d3.svg.arc()
 		.startAngle(function(d) {
@@ -144,7 +144,7 @@ function sunburst(config, context) {
 	}
 
 	self.handleClickNode = function(d) {
-		// TBD
+		console.log(d);
 	}
 
 	self.handleDblclickNode = function(d) {

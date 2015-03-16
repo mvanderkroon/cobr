@@ -57,10 +57,16 @@ function context(basedata) {
 			.duration(200)
 			.style("opacity", 0.8);
 
+		var str = "name: <b>" + d.name + "</b> <br/> frequency: <b>" +
+			d.value + " (" + Math.round((d.value/basedata.nodecount) * 10000) / 100 +
+			"%) </b> <br/> depth: <b>" + d.depth + "</b>";
+
+		if (d.obj && d.obj.length >= 1) { // this is a leaf node
+			str += "<br />id: <b>" + d.obj[0].id + "</b>";
+		}
+
 		tooltip
-			.html("name: <b>" + d.name + "</b> <br/> frequency: <b>" +
-				d.value + " (" + Math.round((d.value/basedata.nodecount) * 10000) / 100 +
-					"%) </b> <br/> depth: <b>" + d.depth + "</b>")
+			.html(str)
 			.style("left", ((d3.event.pageX) + 20) + "px")
 			.style("top", (d3.event.pageY) + "px");
 

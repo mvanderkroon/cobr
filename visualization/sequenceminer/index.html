@@ -48,8 +48,8 @@
 
 		// the input file needs a header!
 		d3.csv("http://10.1.1.118:5001/view/vw_rc_sequences", function(lines) {
-			console.log(lines.length);
-			console.log(lines[0])
+			console.log('read ' + lines.length + ' lines');
+			console.log('building visualization...');
 
 			var bd1 = new basedata();
 			bd1.init(lines);
