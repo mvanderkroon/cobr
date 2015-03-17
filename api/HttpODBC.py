@@ -1,3 +1,5 @@
+
+
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -9,22 +11,14 @@ sys.path.append("../common")
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
 
-from flask import Flask
-from flask import request
-from flask import Response
-
+from flask import Flask, after_this_request, request, Response
 from flask_cors import CORS
-from flask.ext.compress import Compress
 
-from csvkit import sql
-from csvkit import table
-from csvkit import CSVKitWriter
-from csvkit.cli import CSVKitUtility
+from csvkit import sql, table, CSVKitWriter
+# from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
-# app.config['MAX_CONTENT_LENGTH'] = 4000 * 1024 * 1024
 cors = CORS(app)
-Compress(app)
 
 @app.route('/primarykey', methods=['GET'])
 def listprimarykeys():
@@ -187,8 +181,10 @@ if __name__ == '__main__':
 
     engine, metadata = sql.get_connection(connection_string)
 
+    # compress.init_app(app)
+
     enable_pretty_logging()
-    server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024)
+    server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024, max_body_size=4000*1024*1024)
     server.bind(args.port)
     server.start(0)  # Forks multiple sub-processes
     IOLoop.instance().start()
