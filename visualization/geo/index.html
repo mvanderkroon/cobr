@@ -107,8 +107,8 @@
     d3.json('cbs_nederland_buurt.json', function(geojson) {
         _geojson = geojson;
 
-        var dsv = d3.dsv(";", "text/plain");
-        d3.csv(apihost + '/view/buurten', function(data) {
+        // var dsv = d3.dsv(";", "text/plain");
+        d3.csv(apihost + 'view/buurten', function(data) {
 
             var headers = _.difference(Object.keys(data[0]), _ignored_properties);
 
