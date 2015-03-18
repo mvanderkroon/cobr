@@ -3,7 +3,7 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
-import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO, json
+import sys, csv, io, argparse, json
 sys.path.append("../common")
 
 from sqlalchemy import create_engine
@@ -133,8 +133,8 @@ def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', sniffli
 def sql2csv(name=None, delimiter=',', quotechar='"'):
     insp = reflection.Inspector.from_engine(engine)
 
-    output = io.BytesIO()
-    writer = unicodecsv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL, encoding='utf-8')
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL)
 
     connection = engine.connect()
     res = connection.execute("SELECT * FROM " + name)
