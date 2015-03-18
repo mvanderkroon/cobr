@@ -57,8 +57,6 @@ def listtables():
 def tabledata(tablename):
     insp = reflection.Inspector.from_engine(engine)
 
-    db_schema = connection_string[connection_string.rfind('/')+1:]
-
     def allowed_file(filename):
         return '.' in filename and \
                filename.rsplit('.', 1)[1] in ALLOWED_UPLOAD_EXTENSIONS
@@ -166,17 +164,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="port for the API to be exposed on, defaults to 5001", metavar="int", default=5001)
     args = parser.parse_args()
 
-    connection_string = args.src
-    if connection_string is None:
-        config = ConfigParser.ConfigParser()
-        config.read('config.ini')
-        if len(config.sections()) == 0:
-            print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-            quit()
-
-        connection_string = config.get('DATAAPI', 'connection_string')
-
-    engine, metadata = sql.get_connection(connection_string)
+    engine, metadata = sql.get_connection(args.src)
 
     enable_pretty_logging()
     server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024, max_body_size=4000*1024*1024)

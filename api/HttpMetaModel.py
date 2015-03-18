@@ -43,16 +43,6 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="port for the API to be exposed on, defaults to 5000", metavar="int", default=5000)
     args = parser.parse_args()
 
-    connection_string = args.src
-    if connection_string is None:
-        config = ConfigParser.ConfigParser()
-        config.read('config.ini')
-        if len(config.sections()) == 0:
-            print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-            quit()
-
-        connection_string = config.get('RESTAPI', 'connection_string')
-
     app.config['DEBUG'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
 

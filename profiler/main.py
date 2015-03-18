@@ -56,7 +56,7 @@ def main(args):
         subtitle='MPTableProcessor done!',
         message='processed: ' + str(len(ptables)) + ' tables in ' + str(math.floor((datetime.datetime.now() - cets).total_seconds())) + ' seconds')
 
-    if not args.dry_run:
+    if not args.dry_run and args.target:
         engine = create_engine(args.target)
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -92,6 +92,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # currently we catch and ignore all warnings, which is a bit extreme; probably we should output these warning to a log file
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
     main(args)
