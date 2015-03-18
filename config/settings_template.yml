@@ -6,16 +6,3 @@ HttpMetaModel:
     connection_string:
     ip: 127.0.0.1
     port: 5001
-Profiler:
-    src:
-    target:
-ESpopulator:
-    src:
-    esip: 127.0.0.1
-    esport: 9200
-PrimaryKeyDiscovery:
-    src:
-    target:
-ForeignKeyDiscovery:
-    src:
-    target:
