@@ -1,4 +1,4 @@
-import sys, argparse, ConfigParser
+import sys, argparse
 sys.path.append("../common")
 
 from tornado.wsgi import WSGIContainer
@@ -9,13 +9,11 @@ from tornado.log import enable_pretty_logging
 import flask
 import flask.ext.sqlalchemy
 import flask.ext.restless
-from flask.ext.compress import Compress
 
 from objects import ForeignKey, PrimaryKey, Table, Column
 
 # Create the Flask application and the Flask-SQLAlchemy object.
 app = flask.Flask(__name__)
-Compress(app)
 
 db = flask.ext.sqlalchemy.SQLAlchemy(app)
 
@@ -30,10 +28,10 @@ manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 
 # Create API endpoints, which will be available at /api/<tablename> by
 # default. Allowed HTTP methods can be specified as well.
-manager.create_api(Table, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
-manager.create_api(Column, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
-manager.create_api(ForeignKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
-manager.create_api(PrimaryKey, methods=['GET', 'POST', 'PUT', 'DELETE'], results_per_page=-1, allow_functions=True)
+manager.create_api(Table, methods=['GET'], results_per_page=-1, allow_functions=True)
+manager.create_api(Column, methods=['GET'], results_per_page=-1, allow_functions=True)
+manager.create_api(ForeignKey, methods=['GET'], results_per_page=-1, allow_functions=True)
+manager.create_api(PrimaryKey, methods=['GET'], results_per_page=-1, allow_functions=True)
 
 app.after_request(add_cors_headers)
 
@@ -44,9 +42,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     app.config['DEBUG'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
+    app.config['SQLALCHEMY_DATABASE_URI'] = args.src
 
     enable_pretty_logging()
+
     server = HTTPServer(WSGIContainer(app))
     server.bind(args.port)
     server.start(0)  # Forks multiple sub-processes
