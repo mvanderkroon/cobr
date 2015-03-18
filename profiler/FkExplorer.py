@@ -1,87 +1,20 @@
-import sys
+import sys, os, math, emd, os, argparse
 sys.path.append("../common")
 sys.path.append("../api")
 
+from MetaModel import MetaModel
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
-import metaclient
-import mssql_connector
 
-import math
 import numpy as np
-import emd
 from sqlalchemy import and_
 
-import os
-import configparser
-from optparse import OptionParser
-
-parser = OptionParser()
-parser.add_option("-i", "--host", dest="db_host", help="", metavar="string")
-parser.add_option("-u", "--user", dest="db_user", help="", metavar="string")
-parser.add_option("-p", "--password", dest="db_password", help="", metavar="string")
-parser.add_option("-c", "--catalog", dest="db_catalog", help="", metavar="string")
-(options, args) = parser.parse_args()
-
 class Discovery():
-	def __init__(self, tables=[], columns=[], pksingle=[], pkmulti=[], colseparator='|', getDataFn=None):
+	def __init__(self, tables=[], columns=[], pksingle=[], pkmulti=[], colseparator='|'):
 		self.tables = tables
 		self.columns = columns
 		self.pksingle = pksingle
 		self.pkmulti = pkmulti
 		self.colseparator = colseparator
-		self.getDataFn = getDataFn
-
-	# def getDataFn(self, schema, columnnames, tablename):
-	# 	print('getting data for: {0}.{1} -- {2} '.format(schema, tablename, str(columnnames)))
-
-	# 	tdict = {}
-	# 	tdict['image'] = "CAST(CAST([{0}] AS BINARY) AS NVARCHAR(MAX))"
-	# 	tdict['text'] = "CAST([{0}] AS NVARCHAR(MAX))"
-	# 	tdict['ntext'] = "CAST([{0}] AS NVARCHAR(MAX))"
-
-	# 	selectclause = ""
-	# 	if type(columnnames) is list:
-	# 		# first, figure out column datatype
-	# 		for cn in columnnames:
-	# 			key = (schema, tablename, cn)
-
-	# 			if self.coldict[key]['data_type'] in tdict:
-	# 				selectclause += tdict[self.coldict[key]['data_type']].format(cn) + ","
-	# 			else:
-	# 				selectclause += "[{0}],".format(cn)
-	# 		selectclause = selectclause[0:-1]
-	# 	else:
-	# 		# first, figure out column datatype
-	# 		key = (schema, tablename, str(columnnames))
-	# 		if self.coldict[key]['data_type'] in tdict:
-	# 			selectclause += tdict[self.coldict[key]['data_type']].format(str(columnnames))
-	# 		else:
-	# 			selectclause += "[{0}]".format(columnnames)
-
-	# 	result = []
-
-	# 	q = """
-	# 		SELECT
-	# 			{0}, COUNT(*)
-	# 		FROM
-	# 			[{1}].[{2}]
-	# 		GROUP BY
-	# 			{0}
-	# 		ORDER BY COUNT(*) DESC
-	# 		""".format(selectclause, schema, tablename)
-
-	# 	print(q)
-	# 	print('')
-
-	# 	self.cur.execute(q)
-	# 	columns = []
-	# 	for row in self.cur:
-	# 		if len(columnnames) > 1:
-	# 			result.append(list(row))
-	# 		else:
-	# 			result.append(list(row))
-
-	# 	return result;
 
 	def cartesian(self, L):
 		if (len(L) == 0 or type(L) != list): # this shouldn't fucking happen
@@ -155,6 +88,12 @@ class Discovery():
 
 		return hists
 
+	def colKey(column):
+		return (column.info['schemaname'], column.table, column.name)
+
+	def pkKey(pk):
+		return (pk['schemaname'], pk['tablename'], colseparator.join(pk['constrained_columns']))
+
 	def discoverfks(self, theta):
 		# phase 1
 		fs = []
@@ -176,7 +115,9 @@ class Discovery():
 
 			for keycolumn_name in pkcollst: # foreach column in primary key
 				for candidate in self.columns: # foreach column as foreign key candidate
-					if self.inclusion(bksketches[(candidate.db_schema, candidate.tablename, candidate.columnname)], bksketches[(pk.db_schema, pk.tablename, keycolumn_name)]) >= theta and (candidate.tablename != pk.tablename):
+					this = bksketches[(candidate.db_schema, candidate.tablename, candidate.columnname)]
+					that = bksketches[(pk.db_schema, pk.tablename, keycolumn_name)]
+					if self.inclusion(this, that) >= theta and (candidate.tablename != pk.tablename):
 						if n == 1: # in case we are dealing with a single column pk
 							fs.append(([candidate], pk))
 						if n > 1: # in case we are dealing with a multi column pk
@@ -297,38 +238,35 @@ def pruneDuplicateFks(fks):
 			pruned.append(fk)
 	return pruned
 
-def main():
-	config = configparser.ConfigParser()
-	config.read('config.ini')
-	if len(config.sections()) == 0:
-		print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-		quit()
+def main(args):
+	colseparator = '|'
+	miner = MetaModel(args.src)
 
-	reader = metaclient.reader(config['metadb']['connection_string'])
+	tables = miner.tables()
+	columns = miner.columns()
 
-	# filter syntax, see sqlalchemy documentation
-	tables = reader.getTables(filter=Table.db_catalog==options.db_catalog)
-	columns = reader.getColumns(filter=Column.db_catalog==options.db_catalog)
-	pks = reader.getPrimaryKeys(filter=PrimaryKey.db_catalog==options.db_catalog)
-	reader.close()
+	dic = {}
+	for pk in [ c for c in columns if c.primary_key ]:
+		if (pk.info['schemaname'], pk.table.name) not in dic:
+			dic[(pk.info['schemaname'], pk.table.name)] = []
+		dic[(pk.info['schemaname'], pk.table.name)].append(pk)
 
 	# split primary keys into singlecolumn and multicolumn keys
-	spks = []
-	mkps = []
-	for pk in pks:
-		if len(pk.db_columns.split('|')) > 1:
-			mkps.append(pk)
-		else:
-			spks.append(pk)
+	spks = [ dic[key] for key in dic.keys() if len(dic[key]) == 1 ]
+	mpks = [ dic[key] for key in dic.keys() if len(dic[key]) > 1 ]
 
-	db = mssql_connector.database(db_host=options.db_host, db_user=options.db_user, db_password=options.db_password, db_catalog=options.db_catalog)
-	db.doDataInit()
-	affaires = Discovery(tables=tables, columns=columns, pksingle=spks, pkmulti=mkps, getDataFn=db.getData)
+	print("LOT'S OF WORK IN PROGRESS...")
+	exit()
+
+	affaires = Discovery(tables=tables, columns=columns, pksingle=spks, pkmulti=mkps)
+
 	fks = pruneDuplicateFks([ fk[0] for fk in affaires.discoverfks(0.9) ])
 
-	writer = metaclient.writer(config['metadb']['connection_string'])
-	writer.writeForeignKeys(fks)
-	writer.close()
-
 if __name__ == '__main__':
-	main()
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
+	parser.add_argument("-t", "--target", help="connection_string for the target-database", metavar="string")
+	parser.add_argument("-d", "--dry_run", help="flag to make a dry-run without storing the result to target database", action='store_true', default=False)
+	args = parser.parse_args()
+
+	main(args)
