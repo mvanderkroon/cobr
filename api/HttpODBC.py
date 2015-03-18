@@ -13,7 +13,6 @@ from flask import Flask, after_this_request, request, Response
 from flask_cors import CORS
 
 from csvkit import sql, table, CSVKitWriter
-# from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -178,8 +177,6 @@ if __name__ == '__main__':
         connection_string = config.get('DATAAPI', 'connection_string')
 
     engine, metadata = sql.get_connection(connection_string)
-
-    # compress.init_app(app)
 
     enable_pretty_logging()
     server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024, max_body_size=4000*1024*1024)
