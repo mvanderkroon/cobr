@@ -1,6 +1,5 @@
 import sys, os, math, emd, os, argparse
 sys.path.append("../common")
-sys.path.append("../api")
 
 from MetaModel import MetaModel
 from objects import ForeignKey, PrimaryKey, Table, Column, Base

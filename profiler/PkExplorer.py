@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import sys, os, itertools, operator, sortedcontainers, pymssql, argparse
 sys.path.append("../common")
-sys.path.append("../api")
 
 from MetaModel import MetaModel
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
