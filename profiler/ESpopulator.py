@@ -4,13 +4,13 @@ sys.path.append("../common")
 from MetaModel import MetaModel
 from objects import ForeignKey, PrimaryKey, Table, Column, Base
 
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
+from elasticsearch import Elasticsearch, helpers
 
 from multiprocessing import Pool
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
+from sqlalchemy import exc as sa_exc
 
 excluded = ['image']
 
@@ -102,4 +102,7 @@ if __name__ == '__main__':
 	parser.add_argument("-c", "--cpu", help="number of processes to run within the pool, defaults to 4", metavar="string", default='4')
 	args = parser.parse_args()
 
-	main(args)
+	# currently we catch and ignore all warnings, which is a bit extreme; probably we should output these warning to a log file
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        main(args)

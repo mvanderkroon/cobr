@@ -13,7 +13,6 @@ from Mapper import TableMapper, ColumnMapper, PrimaryKeyMapper, ForeignKeyMapper
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-
 def main(args):
     sts = datetime.datetime.now()
 
@@ -94,4 +93,4 @@ if __name__ == '__main__':
     # currently we catch and ignore all warnings, which is a bit extreme; probably we should output these warning to a log file
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-    main(args)
+        main(args)
