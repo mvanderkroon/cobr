@@ -25,8 +25,8 @@ def main(args):
 
     columns = miner.columns()
     tables = miner.tables()
-    fks = miner.foreignKeys()
-    pks = miner.primaryKeys()
+    fks = fkmapper.multiple(miner.foreignKeys())
+    pks = pkmapper.multiple(miner.primaryKeys())
 
     print('## cols: ' + str(len(columns)))
     print('## tables: ' + str(len(tables)))
@@ -39,7 +39,7 @@ def main(args):
         columns = columns, \
         columnprocessor = NumpyColumnProcessor,
         mapper = columnmapper)
-    pcolumns = cp.execute(processes=args.cpu, verbose=True)
+    pcolumns = cp.execute(processes=int(args.cpu), verbose=True)
 
     cets = datetime.datetime.now()
     # Notifier.notify(title='cobr.io ds-toolkit',
@@ -49,7 +49,7 @@ def main(args):
     print('')
     print('## processing tables...')
     tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
-    ptables = tp.execute(processes=args.cpu, verbose=True)
+    ptables = tp.execute(processes=int(args.cpu), verbose=True)
 
     # Notifier.notify(title='cobr.io ds-toolkit',
     #     subtitle='MPTableProcessor done!',
@@ -62,8 +62,8 @@ def main(args):
 
         writeToDb(session, ptables)
         writeToDb(session, pcolumns)
-        writeToDb(session, ppks)
-        writeToDb(session, pfks)
+        writeToDb(session, pks)
+        writeToDb(session, fks)
 
     print('')
     print('## time elapsed: ' + str(datetime.datetime.now() - sts))
