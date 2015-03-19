@@ -127,8 +127,7 @@ class MetaModel():
         return self._db_catalog
 
     def inlinksForTable(self, table):
-        return -1
-        # return [ c for c in self.foreignKeys() if c['referred_table'] == table.name and c['referred_schema'] == table.schema ]
+        return [ c for c in self.foreignKeys() if c['referred_table'] == table.name and c['referred_schema'] == table.schema ]
 
     def outlinksForTable(self, table):
         return table.foreign_keys
