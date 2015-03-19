@@ -1,9 +1,11 @@
+
+
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
-import sys, csv, io, argparse, json
+import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO, json
 sys.path.append("../common")
 
 from sqlalchemy import create_engine
@@ -13,6 +15,7 @@ from flask import Flask, after_this_request, request, Response
 from flask_cors import CORS
 
 from csvkit import sql, table, CSVKitWriter
+# from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -133,8 +136,8 @@ def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', sniffli
 def sql2csv(name=None, delimiter=',', quotechar='"'):
     insp = reflection.Inspector.from_engine(engine)
 
-    output = io.StringIO()
-    writer = csv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL)
+    output = io.BytesIO()
+    writer = unicodecsv.writer(output, delimiter=str(delimiter), quotechar=str(quotechar), quoting=csv.QUOTE_ALL, encoding='utf-8')
 
     connection = engine.connect()
     res = connection.execute("SELECT * FROM " + name)
@@ -164,7 +167,19 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="port for the API to be exposed on, defaults to 5001", metavar="int", default=5001)
     args = parser.parse_args()
 
-    engine, metadata = sql.get_connection(args.src)
+    connection_string = args.src
+    if connection_string is None:
+        config = ConfigParser.ConfigParser()
+        config.read('config.ini')
+        if len(config.sections()) == 0:
+            print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
+            quit()
+
+        connection_string = config.get('DATAAPI', 'connection_string')
+
+    engine, metadata = sql.get_connection(connection_string)
+
+    # compress.init_app(app)
 
     enable_pretty_logging()
     server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024, max_body_size=4000*1024*1024)
