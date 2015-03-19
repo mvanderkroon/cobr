@@ -1,8 +1,0 @@
-HttpODBC:
-    connection_string:
-    ip: 127.0.0.1
-    port: 5000
-HttpMetaModel:
-    connection_string:
-    ip: 127.0.0.1
-    port: 5001

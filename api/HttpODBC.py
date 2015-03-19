@@ -1,5 +1,3 @@
-
-
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -15,7 +13,6 @@ from flask import Flask, after_this_request, request, Response
 from flask_cors import CORS
 
 from csvkit import sql, table, CSVKitWriter
-# from csvkit.cli import CSVKitUtility
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -167,19 +164,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="port for the API to be exposed on, defaults to 5001", metavar="int", default=5001)
     args = parser.parse_args()
 
-    connection_string = args.src
-    if connection_string is None:
-        config = ConfigParser.ConfigParser()
-        config.read('config.ini')
-        if len(config.sections()) == 0:
-            print('config.ini file not yet present, please copy from template (templace_config.ini) and fill in required properties')
-            quit()
-
-        connection_string = config.get('DATAAPI', 'connection_string')
-
-    engine, metadata = sql.get_connection(connection_string)
-
-    # compress.init_app(app)
+    engine, metadata = sql.get_connection(args.src)
 
     enable_pretty_logging()
     server = HTTPServer(WSGIContainer(app), max_buffer_size=4000*1024*1024, max_body_size=4000*1024*1024)
