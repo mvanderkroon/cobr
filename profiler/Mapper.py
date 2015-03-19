@@ -30,8 +30,8 @@ class ColumnMapper():
 
     def single(self, column, statistics=None):
         obj = Column()
-        obj.db_catalog = column.info['db_catalog']
-        obj.schema = column.info['schemaname']
+        obj.db_catalog = column.table.info['db_catalog']
+        obj.schema = column.table.info['schemaname']
         obj.tablename = column.table.name
         obj.columnname = column.name
         obj.ordinal_position = -1
@@ -52,6 +52,7 @@ class ColumnMapper():
         obj.num_zero = statistics['num_zero']
         obj.start_date = statistics['start_date']
         obj.end_date = statistics['end_date']
+
         return obj
 
     def multiple(self, lst):

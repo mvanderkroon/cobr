@@ -5,6 +5,9 @@ from tornado.log import enable_pretty_logging
 
 import sys, csv, io, argparse, ConfigParser, unicodecsv, StringIO, json
 sys.path.append("../common")
+sys.path.append("../profiler")
+
+from MetaModel import MetaModel
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
