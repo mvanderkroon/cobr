@@ -13,6 +13,7 @@ from Mapper import TableMapper, ColumnMapper, PrimaryKeyMapper, ForeignKeyMapper
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+
 def main(args):
     sts = datetime.datetime.now()
 
@@ -35,20 +36,22 @@ def main(args):
 
     print('')
     print('## processing columns...')
-    cp = MPColumnProcessor(connection_string = args.src,
-        columns = columns, \
-        columnprocessor = NumpyColumnProcessor,
-        mapper = columnmapper)
+    cp = MPColumnProcessor(connection_string=args.src,
+            columns=columns,
+            columnprocessor=NumpyColumnProcessor,
+            mapper=columnmapper)
     pcolumns = cp.execute(processes=int(args.cpu), verbose=True)
 
-    cets = datetime.datetime.now()
+    # cets = datetime.datetime.now()
     # Notifier.notify(title='cobr.io ds-toolkit',
     #     subtitle='MPColumnProcessor done!',
     #     message='processed: ' + str(len(pcolumns)) + ' columns in ' + str(math.floor((cets - sts).total_seconds())) + ' seconds')
 
     print('')
     print('## processing tables...')
-    tp = MPTableProcessor(connection_string = args.src, tables = tables, mapper = tablemapper)
+    tp = MPTableProcessor(connection_string=args.src,
+            tables=tables,
+            mapper=tablemapper)
     ptables = tp.execute(processes=int(args.cpu), verbose=True)
 
     # Notifier.notify(title='cobr.io ds-toolkit',
@@ -71,6 +74,7 @@ def main(args):
     # Notifier.notify(title='cobr.io ds-toolkit',
     #     subtitle='Profiling done!',
     #     message='duration: ' + str(math.floor((datetime.datetime.now() - sts).total_seconds())) + ' seconds')
+
 
 def writeToDb(session, objects):
     try:

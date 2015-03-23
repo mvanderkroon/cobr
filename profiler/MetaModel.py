@@ -4,20 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.engine import reflection
 
-from contextlib import contextmanager
-
 import argparse, datetime
 
-@contextmanager
-def dbconnection(engine):
-    try:
-        conn = engine.connect()
-        yield conn
-    except:
-        conn.close()
-        raise
-    finally:
-        conn.close()
 
 class MetaModel():
     def __get_db_catalogname(self, connection_string=None):
@@ -25,7 +13,7 @@ class MetaModel():
 
     def __get_schemanames(self, inspector=None):
         if inspector is None:
-            inspector = reflection.Inspector.from_engine(self.engine) # we do this to avoid having to 'refresh'
+            inspector = reflection.Inspector.from_engine(self.engine)  # we do this to avoid having to 'refresh'
 
         schemanames = []
 
@@ -38,7 +26,7 @@ class MetaModel():
 
     def pk_for_tablename(self, tablename=None, schemaname=None, inspector=None):
         if inspector is None:
-            inspector = reflection.Inspector.from_engine(self.engine) # we do this to avoid having to 'refresh'
+            inspector = reflection.Inspector.from_engine(self.engine)  # we do this to avoid having to 'refresh'
 
         pk = inspector.get_pk_constraint(table_name=tablename, schema=schemaname)
 
@@ -50,7 +38,7 @@ class MetaModel():
 
     def fk_for_tablename(self, tablename=None, schemaname=None, inspector=None):
         if inspector is None:
-            inspector = reflection.Inspector.from_engine(self.engine) # we do this to avoid having to 'refresh'
+            inspector = reflection.Inspector.from_engine(self.engine)  # we do this to avoid having to 'refresh'
 
         fks = inspector.get_foreign_keys(table_name=tablename, schema=schemaname)
         for fk in fks:
@@ -62,7 +50,7 @@ class MetaModel():
 
     def table_for_tablename(self, tablename=None, schemaname=None, inspector=None):
         if inspector is None:
-            inspector = reflection.Inspector.from_engine(self.engine) # we do this to avoid having to 'refresh'
+            inspector = reflection.Inspector.from_engine(self.engine)  # we do this to avoid having to 'refresh'
 
         table = Table(tablename, MetaData(schema=schemaname), autoload=True, autoload_with=self.engine)
         table.info['schemaname'] = schemaname
@@ -86,27 +74,32 @@ class MetaModel():
         self._db_catalog = self.__get_db_catalogname(connection_string)
 
         # 'mine' the subject database for it's metamodel
-        with dbconnection(self.engine) as connection:
-            for schemaname in self._schemanames:
-                if schemaname in __excluded_schemas:
-                    continue
+        for schemaname in self._schemanames:
+            if schemaname in __excluded_schemas:
+                continue
 
-                tablenames = insp.get_table_names(schema=schemaname)
+            tablenames = insp.get_table_names(schema=schemaname)
 
-                # getting all primary keys
-                for tablename in tablenames:
-                    self._pks.append(self.pk_for_tablename(tablename=tablename, schemaname=schemaname, inspector=insp))
+            # getting all primary keys
+            for tablename in tablenames:
+                self._pks.append(self.pk_for_tablename(tablename=tablename,
+                                                    schemaname=schemaname,
+                                                    inspector=insp))
 
-                # getting all foreign keys
-                for tablename in tablenames:
-                    self._fks.extend(self.fk_for_tablename(tablename=tablename, schemaname=schemaname, inspector=insp))
+            # getting all foreign keys
+            for tablename in tablenames:
+                self._fks.extend(self.fk_for_tablename(tablename=tablename,
+                                                    schemaname=schemaname,
+                                                    inspector=insp))
 
-                # getting all tables
-                for tablename in tablenames:
-                    table = self.table_for_tablename(tablename=tablename, schemaname=schemaname, inspector=insp)
-                    self._tables.append(table)
+            # getting all tables
+            for tablename in tablenames:
+                table = self.table_for_tablename(tablename=tablename,
+                                                schemaname=schemaname,
+                                                inspector=insp)
+                self._tables.append(table)
 
-                    self._columns.extend(table.columns)
+                self._columns.extend(table.columns)
 
     def tables(self):
         return self._tables
@@ -127,7 +120,7 @@ class MetaModel():
         return self._db_catalog
 
     def inlinksForTable(self, table):
-        return [ c for c in self.foreignKeys() if c['referred_table'] == table.name and c['referred_schema'] == table.schema ]
+        return [c for c in self.foreignKeys() if c['referred_table'] == table.name and c['referred_schema'] == table.schema]
 
     def outlinksForTable(self, table):
         return table.foreign_keys
@@ -155,4 +148,3 @@ if __name__ == "__main__":
     print('schemas: ' + str(mm.schemas()))
 
     print('time elapsed: ' + str(datetime.datetime.now() - sts))
-

@@ -3,6 +3,7 @@ sys.path.append("../common")
 
 from objects import Table, Column, PrimaryKey, ForeignKey
 
+
 class TableMapper():
     def __init__(self):
         pass
@@ -19,10 +20,8 @@ class TableMapper():
         return obj
 
     def multiple(self, lst):
-        retval = retval = [self.single(tup[0], tup[1]) for tup in lst]
-        # for tup in lst:
-        #     retval.append(self.single(tup[0], tup[1]))
-        return retval
+        return [self.single(tup[0], tup[1]) for tup in lst]
+
 
 class ColumnMapper():
     def __init__(self):
@@ -56,10 +55,8 @@ class ColumnMapper():
         return obj
 
     def multiple(self, lst):
-        retval = [self.single(tup[0], tup[1]) for tup in lst]
-        # for tup in lst:
-        #     retval.append(self.single(tup[0], tup[1]))
-        return retval
+        return [self.single(tup[0], tup[1]) for tup in lst]
+
 
 class PrimaryKeyMapper():
     def __init__(self):
@@ -80,8 +77,8 @@ class PrimaryKeyMapper():
         return obj
 
     def multiple(self, lst):
-        retval = [self.single(item) for item in lst]
-        return retval
+        return [self.single(item) for item in lst]
+
 
 class ForeignKeyMapper():
     def __init__(self):
@@ -105,5 +102,4 @@ class ForeignKeyMapper():
         return obj
 
     def multiple(self, lst):
-        retval = [self.single(item) for item in lst]
-        return retval
+        return [self.single(item) for item in lst]

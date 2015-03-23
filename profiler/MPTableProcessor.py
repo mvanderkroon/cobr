@@ -9,8 +9,6 @@ from sqlalchemy.sql import select
 from MetaModel import MetaModel
 from multiprocessing import Pool
 
-from contextlib import contextmanager
-
 class MPTableProcessor():
 
     def __init__(self, connection_string, tables, mapper):
@@ -18,7 +16,7 @@ class MPTableProcessor():
         self.tables = tables
         self.mapper = mapper
 
-    def execute(self, processes=32, verbose=False):
+    def execute(self, processes=2, verbose=False):
         pool = Pool(processes=processes)
         result = []
         if verbose:
@@ -45,14 +43,12 @@ class MPTableProcessor():
             num_rows = conn.execute(table.count()).fetchone()[0]
             num_columns = len(table.columns)
             num_explicit_outlinks = len(table.foreign_keys)
-            conn.close()
 
             return self.mapper.single(table, {'num_rows': num_rows, 'num_columns': num_columns, 'num_explicit_outlinks': num_explicit_outlinks})
             # return (table.name, {'num_rows': num_rows, 'num_columns': num_columns, 'num_explicit_outlinks': num_explicit_outlinks})
             # cp = self.columnprocessor(values)
             # return (column, cp.doOperations())
         except Exception as ex:
-            conn.close()
             print(ex)
         finally:
             conn.close()

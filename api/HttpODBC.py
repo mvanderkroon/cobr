@@ -20,20 +20,24 @@ from csvkit import sql, table, CSVKitWriter
 app = Flask(__name__)
 cors = CORS(app)
 
+
 @app.route('/primarykey', methods=['GET'])
 def listprimarykeys():
     insp = reflection.Inspector.from_engine(engine)
     return json.dumps([insp.get_primary_keys(tablename) for tablename in insp.get_table_names() if len(insp.get_primary_keys(tablename)) > 0])
+
 
 @app.route('/foreignkey', methods=['GET'])
 def listforeignkeys():
     insp = reflection.Inspector.from_engine(engine)
     return json.dumps([insp.get_foreign_keys(tablename) for tablename in insp.get_table_names() if len(insp.get_foreign_keys(tablename)) > 0])
 
+
 @app.route('/view', methods=['GET'])
 def listviews():
     insp = reflection.Inspector.from_engine(engine)
     return json.dumps(insp.get_view_names())
+
 
 @app.route('/view/<viewname>', methods=['GET'])
 def viewdata(viewname):
@@ -51,10 +55,12 @@ def viewdata(viewname):
     else:
         return "Not a valid viewname"
 
+
 @app.route('/table', methods=['GET'])
 def listtables():
     insp = reflection.Inspector.from_engine(engine)
     return json.dumps(insp.get_table_names())
+
 
 @app.route('/table/<tablename>', methods=['GET', 'POST'])
 def tabledata(tablename):
@@ -92,6 +98,7 @@ def tabledata(tablename):
         else:
             return "Not a valid tablename"
 
+
 def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', snifflimit=512*1024):
 
     try:
@@ -111,8 +118,8 @@ def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', sniffli
         sql_table = sql.make_table(
             csv_table,
             tablename,
-            False, #self.args.no_constraints
-            db_schema, #self.args.db_schema
+            False,  # self.args.no_constraints
+            db_schema,  # self.args.db_schema
             metadata
         )
 
@@ -133,6 +140,7 @@ def csv2sql(file=None, db_schema=None, tablename=None, encoding='utf-8', sniffli
         file.close()
         return json.dumps(tablename)
 
+
 def sql2csv(name=None, delimiter=',', quotechar='"'):
     insp = reflection.Inspector.from_engine(engine)
 
@@ -145,7 +153,6 @@ def sql2csv(name=None, delimiter=',', quotechar='"'):
     # write header
     writer.writerow([c['name'] for c in insp.get_columns(name)])
 
-    c = 0
     while True:
         row = res.fetchone()
         if row is None:
