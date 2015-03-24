@@ -1,13 +1,14 @@
 import datetime, math, sys, argparse
 sys.path.append("../util")
 
-from osxnotifications import Notifier
+# from osxnotifications import Notifier
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 
 from MetaModel import MetaModel
 from multiprocessing import Pool
+
 
 class MPTableProcessor():
 
@@ -68,4 +69,4 @@ if __name__ == "__main__":
     print('number of processed tables: ' + str(len(result)))
 
     # Calling the notification function
-    Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables in ' + str(math.floor(duration.total_seconds())) + ' seconds')
+    # Notifier.notify(title='cobr.io ds-toolkit', subtitle='MPTableProcessor done!', message='processed: ' + str(len(result)) + ' tables in ' + str(math.floor(duration.total_seconds())) + ' seconds')

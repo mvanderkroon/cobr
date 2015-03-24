@@ -87,10 +87,11 @@ class ForeignKeyMapper():
 
     def single(self, fk, statistics=None):
         obj = ForeignKey()
+        print(fk)
         obj.db_catalog = fk['db_catalog']
         obj.pkdb_schema = fk['srcschema']
         obj.fkdb_schema = fk['referred_schema']
-        obj.pktablename = fk['srcschema']
+        obj.pktablename = fk['srctable']
         obj.fktablename = fk['referred_table']
         obj.pk_columns = '|'.join(fk['constrained_columns'])
         obj.fk_columns = '|'.join(fk['referred_columns'])
