@@ -36,11 +36,15 @@ def main(args):
 
     print('')
     print('## processing columns...')
-    cp = MPColumnProcessor(connection_string=args.src,
-            columns=columns,
-            columnprocessor=NumpyColumnProcessor,
-            mapper=columnmapper)
-    pcolumns = cp.execute(processes=int(args.cpu), verbose=True)
+    pcolumns = []
+    if not args.explore:
+        cp = MPColumnProcessor(connection_string=args.src,
+                columns=columns,
+                columnprocessor=NumpyColumnProcessor,
+                mapper=columnmapper)
+        pcolumns = cp.execute(processes=int(args.cpu), verbose=True)
+    else:
+        pcolumns = columnmapper.multiple([(column, None) for column in columns])
 
     # cets = datetime.datetime.now()
     # Notifier.notify(title='cobr.io ds-toolkit',
@@ -91,6 +95,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--src", help="connection_string for the subject-database", metavar="string")
     parser.add_argument("-t", "--target", help="connection_string for the target-database", metavar="string")
+    parser.add_argument("-e", "--explore", help="flag to make an explorative run without profiling", action='store_true', default=False)
     parser.add_argument("-d", "--dry_run", help="flag to make a dry-run without storing the result to target database", action='store_true', default=False)
 
     parser.add_argument("-c", "--cpu", help="number of processes to run within the pool, defaults to 2", metavar="string", default='2')

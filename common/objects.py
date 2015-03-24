@@ -19,7 +19,7 @@ def validate_float(value):
         'numpy.int32', 'numpy.int16', 'numpy.int8', 'numpy.uint8',
         'numpy.uint16', 'numpy.uint32', 'numpy.uint64', 'numpy.float_',
         'numpy.float16', 'numpy.float32', 'numpy.float64', 'numpy.complex_',
-        'numpy.complex64', 'numpy.complex128', 'int', 'float']
+        'numpy.complex64', 'numpy.complex128', 'int', 'float', 'decimal.Decimal']
 
     if typestring(value) in allowed_types:
         if math.isnan(value):

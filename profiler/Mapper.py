@@ -35,22 +35,23 @@ class ColumnMapper():
         obj.columnname = column.name
         obj.ordinal_position = -1
         obj.datatype = str(column.type)
-        obj.num_nulls = statistics['num_nulls']
-        obj.num_distinct_values = statistics['num_distinct_values']
-        obj.min = statistics['min']
-        obj.max = statistics['max']
-        obj.avg = statistics['avg']
-        obj.var = statistics['var']
-        obj.median = statistics['median']
-        obj.stdev = statistics['stdev']
-        obj.sum = statistics['sum']
-        obj.mode = statistics['mode']
-        obj.lifespan_in_days = statistics['lifespan_in_days']
-        obj.num_positive = statistics['num_positive']
-        obj.num_negative = statistics['num_negative']
-        obj.num_zero = statistics['num_zero']
-        obj.start_date = statistics['start_date']
-        obj.end_date = statistics['end_date']
+        if statistics is not None:
+            obj.num_nulls = statistics['num_nulls']
+            obj.num_distinct_values = statistics['num_distinct_values']
+            obj.min = statistics['min']
+            obj.max = statistics['max']
+            obj.avg = statistics['avg']
+            obj.var = statistics['var']
+            obj.median = statistics['median']
+            obj.stdev = statistics['stdev']
+            obj.sum = statistics['sum']
+            obj.mode = statistics['mode']
+            obj.lifespan_in_days = statistics['lifespan_in_days']
+            obj.num_positive = statistics['num_positive']
+            obj.num_negative = statistics['num_negative']
+            obj.num_zero = statistics['num_zero']
+            obj.start_date = statistics['start_date']
+            obj.end_date = statistics['end_date']
 
         return obj
 

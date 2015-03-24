@@ -26,6 +26,8 @@ class MPColumnProcessor():
             print('')
 
         for i, _ in enumerate(pool.imap_unordered(self.profileOneColumn, self.columns)):
+            if _ is None: continue  # TBD: we should write this one to a log file
+
             result.append(_)
 
             if verbose:
